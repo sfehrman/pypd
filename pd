@@ -1,51 +1,82 @@
 #!/usr/bin/env python3
 
 import os
-# import argparse
-# import getopt
-# import sys
+import getopt
+import sys
 
-entries = []
-files = []
-directories = []
-path = "."
+"""
+-b        brief, unformatted output
+-c        count entries only
+-d <args> date/time options: [all|dtm|dta|dts] [mdy|dmy|ymd]
+-h        help
+-i        show inode numbers
+-l        show symbolic link's status
+-m        show permissions mode [4777]
+-n <args> no output options: [dot,hdr,name,pwd,qty
+-p        permissions: rwx rwx rwx   name.group
+-s <args> sorting options: [none|name|dtm|dta|dts|user|group|inode|link|size|type,rev] (default = '-s name') 
+-t <args> select type: [file,dir] (default = '-t file,dir') 
+-u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
+-v        program version
+-A        show all entries (jncluding '.' and '..')
+-B        show file blocks allocated
+-C        output using single column
+-D        show sub-directory information not it's entries (treat it like a file)
+-L        show hard link count
+-R        recursive list into sub-directories
+-S        show file size (default = bytes)
+-T        show file types
+"""
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument("-d", "--dirname", help="Directory path", default=".")
-#
-# args = parser.parse_args()
-#
-# if args.dirname:
-#     path = args.dirname
+VERSION = "1.0.0"
+GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
+entriesList = []
+filesList = []
+dirsList = []
+inputList = []
+argsList = []
+dirnameList = []
 
-# fullArgs = sys.argv
-#
-# print(fullArgs)
-# exit(0)
+inputList = sys.argv[1:]
+
+try:
+    argsList, dirnameList = getopt.getopt(inputList, GETOPT_STR)
+except getopt.error as e:
+    print(str(e))
+    exit(1)
+
+if len(dirnameList) == 0:
+    dirnameList.append(".")
+
+for dirname in dirnameList:
+    print("")
+
+    if dirname == ".":
+        dirname = os.getcwd()
+
+    entriesList = os.listdir(dirname)
+
+    for entry in entriesList:
+        if os.path.isdir(dirname + "/" + entry):
+            dirsList.append(entry)
+        else:
+            filesList.append(entry)
+
+    print(dirname + "   Entries: " + str(len(entriesList)))
+
+    print("\nFiles: " + str(len(filesList)))
+
+    if len(filesList) > 0:
+        print("")
+        for file in filesList:
+            print(file)
+
+    print("\nDirectories: " + str(len(dirsList)))
+
+    if len(dirsList) > 0:
+        print("")
+        for directory in dirsList:
+            print(directory)
 
 
-entries = os.listdir(path)
-
-for entry in entries:
-    if os.path.isdir(entry):
-        directories.append(entry)
-    else:
-        files.append(entry)
-
-if path == ".":
-    path = os.getcwd()
-
-print("\n"+path + "   Entries: " + str(len(entries)))
-
-print("\nFiles: " + str(len(files)) + "\n")
-
-for file in files:
-    print(file)
-
-print("\nDirectories: " + str(len(directories)))
-
-for directory in directories:
-    print(directory)
-
-
-print("")
+    print("")
