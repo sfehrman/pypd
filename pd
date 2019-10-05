@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+
+import os
+# import argparse
+# import getopt
+# import sys
+
+entries = []
+files = []
+directories = []
+path = "."
+
+# parser = argparse.ArgumentParser()
+# parser.add_argument("-d", "--dirname", help="Directory path", default=".")
+#
+# args = parser.parse_args()
+#
+# if args.dirname:
+#     path = args.dirname
+
+# fullArgs = sys.argv
+#
+# print(fullArgs)
+# exit(0)
+
+
+entries = os.listdir(path)
+
+for entry in entries:
+    if os.path.isdir(entry):
+        directories.append(entry)
+    else:
+        files.append(entry)
+
+if path == ".":
+    path = os.getcwd()
+
+print("\n"+path + "   Entries: " + str(len(entries)))
+
+print("\nFiles: " + str(len(files)) + "\n")
+
+for file in files:
+    print(file)
+
+print("\nDirectories: " + str(len(directories)))
+
+for directory in directories:
+    print(directory)
+
+
+print("")
