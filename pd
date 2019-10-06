@@ -30,12 +30,22 @@ import sys
 
 VERSION = "1.0.0"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
+needNewLine = False
+terminalCols = 0
+padChars = 3
+fillChars = 0
+maxNameLen = 1
+displayCols = 0
+colCount = 0
 entriesList = []
 filesList = []
 dirsList = []
 inputList = []
 argsList = []
 dirnameList = []
+
+ts = os.get_terminal_size()
+terminalCols = ts.columns
 
 inputList = sys.argv[1:]
 
@@ -49,12 +59,23 @@ if len(dirnameList) == 0:
     dirnameList.append(".")
 
 for dirname in dirnameList:
+    entriesList = []
+    filesList = []
+    dirsList = []
+    maxNameLen = 1
+
     print("")
+    if len(dirnameList) > 1:
+        print("-" * terminalCols)
 
     if dirname == ".":
         dirname = os.getcwd()
 
-    entriesList = os.listdir(dirname)
+    try:
+        entriesList = os.listdir(dirname)
+    except FileNotFoundError as e:
+        print(str(e) + "\n")
+        exit(1)
 
     for entry in entriesList:
         if os.path.isdir(dirname + "/" + entry):
@@ -62,21 +83,56 @@ for dirname in dirnameList:
         else:
             filesList.append(entry)
 
+        if (len(entry) + padChars) > maxNameLen:
+            maxNameLen = len(entry) + padChars
+
     print(dirname + "   Entries: " + str(len(entriesList)))
 
-    print("\nFiles: " + str(len(filesList)))
+    displayCols = terminalCols // maxNameLen
+
+    print("")
+    print("Files: " + str(len(filesList)))
 
     if len(filesList) > 0:
         print("")
+        colCount = 0
         for file in filesList:
-            print(file)
+            colCount += 1
 
-    print("\nDirectories: " + str(len(dirsList)))
+            print(file, end='')
+
+            if colCount < displayCols:
+                fillChars = (maxNameLen - len(file))
+                print(' ' * fillChars, end='')
+                needNewLine = True
+            else:
+                colCount = 0
+                print("")
+                needNewLine = False
+
+        if needNewLine:
+            print("")
+
+    print("")
+    print("Directories: " + str(len(dirsList)))
 
     if len(dirsList) > 0:
         print("")
+        colCount = 0
         for directory in dirsList:
-            print(directory)
+            colCount += 1
 
+            print(directory, end='')
+            if colCount < displayCols:
+                fillChars = (maxNameLen - len(directory))
+                print(' ' * fillChars, end='')
+                needNewLine = True
+            else:
+                colCount = 0
+                print("")
+                needNewLine = False
 
-    print("")
+        if needNewLine:
+            print("")
+
+print("")
