@@ -43,8 +43,9 @@ dirsList = []
 inputList = []
 argsList = []
 namesList = []
-showFiles = True
-showDirs = True
+bFiles = True
+bDirs = True
+bCountOnly = False
 
 inputList = sys.argv[1:]
 
@@ -72,14 +73,16 @@ for flag, option in argsList:
     # print("flag: '" + flag + "', option: '" + option + "'")
     if flag == "-t":
         if option.lower().startswith("f"):
-            showFiles = True
-            showDirs = False
+            bFiles = True
+            bDirs = False
         elif option.lower().startswith("d"):
-            showFiles = False
-            showDirs = True
+            bFiles = False
+            bDirs = True
         else:
             print("Invalid value '" + option + "' for switch '-t'")
             exit(1)
+    elif flag == "-c":
+        bCountOnly = True
 
 if len(namesList) == 0:
     namesList.append(".")
@@ -126,11 +129,11 @@ for name in namesList:
 
     displayCols = terminalCols // maxNameLen
 
-    if showFiles:
+    if bFiles:
         print("")
         print("Files: " + str(len(filesList)))
 
-        if len(filesList) > 0:
+        if len(filesList) > 0 and not bCountOnly:
             print("")
             colCount = 0
             for file in filesList:
@@ -150,11 +153,11 @@ for name in namesList:
             if needNewLine:
                 print("")
 
-    if showDirs:
+    if bDirs:
         print("")
         print("Directories: " + str(len(dirsList)))
 
-        if len(dirsList) > 0:
+        if len(dirsList) > 0 and not bCountOnly:
             print("")
             colCount = 0
             for directory in dirsList:
