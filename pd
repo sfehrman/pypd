@@ -15,7 +15,7 @@ import sys
 -n <args> no output options: [dot,hdr,name,pwd,qty
 -p        permissions: rwx rwx rwx   name.group
 -s <args> sorting options: [none|name|dtm|dta|dts|user|group|inode|link|size|type,rev] (default = '-s name') 
--t <args> select type: [file,dir] (default = '-t file,dir') 
+-t <args> select type: [file|f,dir|d] (default show both) 
 -u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
 -v        program version
 -A        show all entries (jncluding '.' and '..')
@@ -42,43 +42,79 @@ filesList = []
 dirsList = []
 inputList = []
 argsList = []
-dirnameList = []
-
-ts = os.get_terminal_size()
-terminalCols = ts.columns
+namesList = []
+showFiles = True
+showDirs = True
 
 inputList = sys.argv[1:]
 
+# print("")
+# print(inputList)
+# print("")
+# exit(0)
+
+terminalCols = os.get_terminal_size(0).columns  # size(x) = 0,1,2,3
+
+# print("columns: " + str(terminalCols))
+# exit(0)
+
 try:
-    argsList, dirnameList = getopt.getopt(inputList, GETOPT_STR)
+    argsList, namesList = getopt.getopt(inputList, GETOPT_STR)
 except getopt.error as e:
     print(str(e))
     exit(1)
 
-if len(dirnameList) == 0:
-    dirnameList.append(".")
+# print("")
+# print(argsList)
+# print("")
 
-for dirname in dirnameList:
+for flag, option in argsList:
+    # print("flag: '" + flag + "', option: '" + option + "'")
+    if flag == "-t":
+        if option.lower().startswith("f"):
+            showFiles = True
+            showDirs = False
+        elif option.lower().startswith("d"):
+            showFiles = False
+            showDirs = True
+        else:
+            print("Invalid value '" + option + "' for switch '-t'")
+            exit(1)
+
+if len(namesList) == 0:
+    namesList.append(".")
+
+for name in namesList:
     entriesList = []
     filesList = []
     dirsList = []
     maxNameLen = 1
 
     print("")
-    if len(dirnameList) > 1:
+    if len(namesList) > 1:
         print("-" * terminalCols)
 
-    if dirname == ".":
-        dirname = os.getcwd()
+    if name == ".":
+        name = os.getcwd()
 
-    try:
-        entriesList = os.listdir(dirname)
-    except FileNotFoundError as e:
-        print(str(e) + "\n")
-        exit(1)
+    if not os.path.exists(name):
+        print("No such file or directory: '" + name + "\n")
+        exit(2)
+
+    if os.path.isdir(name):
+        try:
+            entriesList = os.listdir(name)
+        except FileNotFoundError as e:
+            print("File Not Found: '" + name + "'")
+            continue
+        except PermissionError as e:
+            print("Permission Denied: '" + name + "'")
+            continue
+    else:
+        entriesList.append(name)
 
     for entry in entriesList:
-        if os.path.isdir(dirname + "/" + entry):
+        if os.path.isdir(name + "/" + entry):
             dirsList.append(entry)
         else:
             filesList.append(entry)
@@ -86,53 +122,55 @@ for dirname in dirnameList:
         if (len(entry) + padChars) > maxNameLen:
             maxNameLen = len(entry) + padChars
 
-    print(dirname + "   Entries: " + str(len(entriesList)))
+    print(name + "   Entries: " + str(len(entriesList)))
 
     displayCols = terminalCols // maxNameLen
 
-    print("")
-    print("Files: " + str(len(filesList)))
-
-    if len(filesList) > 0:
+    if showFiles:
         print("")
-        colCount = 0
-        for file in filesList:
-            colCount += 1
+        print("Files: " + str(len(filesList)))
 
-            print(file, end='')
-
-            if colCount < displayCols:
-                fillChars = (maxNameLen - len(file))
-                print(' ' * fillChars, end='')
-                needNewLine = True
-            else:
-                colCount = 0
-                print("")
-                needNewLine = False
-
-        if needNewLine:
+        if len(filesList) > 0:
             print("")
+            colCount = 0
+            for file in filesList:
+                colCount += 1
 
-    print("")
-    print("Directories: " + str(len(dirsList)))
+                print(file, end='')
 
-    if len(dirsList) > 0:
+                if colCount < displayCols:
+                    fillChars = (maxNameLen - len(file))
+                    print(' ' * fillChars, end='')
+                    needNewLine = True
+                else:
+                    colCount = 0
+                    print("")
+                    needNewLine = False
+
+            if needNewLine:
+                print("")
+
+    if showDirs:
         print("")
-        colCount = 0
-        for directory in dirsList:
-            colCount += 1
+        print("Directories: " + str(len(dirsList)))
 
-            print(directory, end='')
-            if colCount < displayCols:
-                fillChars = (maxNameLen - len(directory))
-                print(' ' * fillChars, end='')
-                needNewLine = True
-            else:
-                colCount = 0
-                print("")
-                needNewLine = False
-
-        if needNewLine:
+        if len(dirsList) > 0:
             print("")
+            colCount = 0
+            for directory in dirsList:
+                colCount += 1
+
+                print(directory, end='')
+                if colCount < displayCols:
+                    fillChars = (maxNameLen - len(directory))
+                    print(' ' * fillChars, end='')
+                    needNewLine = True
+                else:
+                    colCount = 0
+                    print("")
+                    needNewLine = False
+
+            if needNewLine:
+                print("")
 
 print("")
