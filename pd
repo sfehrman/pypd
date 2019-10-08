@@ -4,29 +4,6 @@ import os
 import getopt
 import sys
 
-"""
--b        brief, unformatted output
--c        count entries only
--d <args> date/time options: [all|dtm|dta|dts] [mdy|dmy|ymd]
--h        help
--i        show inode numbers
--l        show symbolic link's status
--m        show permissions mode [4777]
--n <args> no output options: [dot,hdr,name,pwd,qty
--p        permissions: rwx rwx rwx   name.group
--s <args> sorting options: [none|name|dtm|dta|dts|user|group|inode|link|size|type,rev] (default = '-s name') 
--t <args> select type: [file|f,dir|d] (default show both) 
--u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
--v        program version
--A        show all entries (jncluding '.' and '..')
--B        show file blocks allocated
--C        output using single column
--D        show sub-directory information not it's entries (treat it like a file)
--L        show hard link count
--R        recursive list into sub-directories
--S        show file size (default = bytes)
--T        show file types
-"""
 
 VERSION = "1.0.0"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
@@ -45,19 +22,50 @@ argsList = []
 namesList = []
 bFiles = True
 bDirs = True
-bCountOnly = False
+bCountOnly = False  # do not show the files / dirs, just the count data
+bBrief = False  # do not print extra blank lines
+bSingleCol = False  # show files / directories in a single column
+bShowDot = True  # show hidden files (name begins with a dot)
+bShowHdr = True  # show column headers with alternate output format
+bShowName = True
+bShowPwd = True  # show the directory path
+bShowQty = True  # show the quantities for Entries, Files, Directories
+
+# --------
+# functions
+# --------
+
+
+def show_help():
+    text = """
+    -b        brief, unformatted output
+    -c        count entries only
+    -d <args> date/time options: [all|dtm|dta|dts] [mdy|dmy|ymd]
+    -h        help
+    -i        show inode numbers
+    -l        show symbolic link's status
+    -m        show permissions mode [4777]
+    -n <args> no output options: [dot,hdr,name,pwd,qty]
+    -p        permissions: rwx rwx rwx   name.group
+    -s <args> sorting options: [none|name|dtm|dta|dts|user|group|inode|link|size|type,rev] (default = '-s name') 
+    -t <args> select type: [file|f,dir|d] (default show both) 
+    -u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
+    -v        program version
+    -A        show all entries (jncluding '.' and '..')
+    -B        show file blocks allocated
+    -C        output using single column
+    -D        show sub-directory information not it's entries (treat it like a file)
+    -L        show hard link count
+    -R        recursive list into sub-directories
+    -S        show file size (default = bytes)
+    -T        show file types
+    """
+    print(text)
+    exit(0)
+
 
 inputList = sys.argv[1:]
-
-# print("")
-# print(inputList)
-# print("")
-# exit(0)
-
 terminalCols = os.get_terminal_size(0).columns  # size(x) = 0,1,2,3
-
-# print("columns: " + str(terminalCols))
-# exit(0)
 
 try:
     argsList, namesList = getopt.getopt(inputList, GETOPT_STR)
@@ -65,13 +73,19 @@ except getopt.error as e:
     print(str(e))
     exit(1)
 
-# print("")
 # print(argsList)
-# print("")
+# print(namesList)
+# exit(0)
 
 for flag, option in argsList:
     # print("flag: '" + flag + "', option: '" + option + "'")
-    if flag == "-t":
+    if flag == "-b":
+        bBrief = True
+    elif flag == "-c":
+        bCountOnly = True
+    elif flag == "-h":
+        show_help()
+    elif flag == "-t":
         if option.lower().startswith("f"):
             bFiles = True
             bDirs = False
@@ -81,8 +95,23 @@ for flag, option in argsList:
         else:
             print("Invalid value '" + option + "' for switch '-t'")
             exit(1)
-    elif flag == "-c":
-        bCountOnly = True
+    elif flag == "-n":
+        for subopt in option.split(","):
+            if subopt.lower() == "dot":
+                bShowDot = False
+            elif subopt.lower() == "hdr":
+                bShowHdr = False
+            elif subopt.lower() == "name":
+                bShowName = False
+            elif subopt.lower() == "pwd":
+                bShowPwd = False
+            elif subopt.lower() == "qty":
+                bShowQty = False
+            else:
+                print("Unknown sub option '" + subopt + "' for switch '-n'")
+                exit(1)
+    elif flag == "-C":
+        bSingleCol = True
 
 if len(namesList) == 0:
     namesList.append(".")
@@ -93,9 +122,10 @@ for name in namesList:
     dirsList = []
     maxNameLen = 1
 
-    print("")
-    if len(namesList) > 1:
-        print("-" * terminalCols)
+    if not bBrief:
+        print("")
+        if len(namesList) > 1:
+            print("-" * terminalCols)
 
     if name == ".":
         name = os.getcwd()
@@ -117,6 +147,9 @@ for name in namesList:
         entriesList.append(name)
 
     for entry in entriesList:
+        if entry.startswith(".") and not bShowDot:
+            continue
+        
         if os.path.isdir(name + "/" + entry):
             dirsList.append(entry)
         else:
@@ -125,55 +158,81 @@ for name in namesList:
         if (len(entry) + padChars) > maxNameLen:
             maxNameLen = len(entry) + padChars
 
-    print(name + "   Entries: " + str(len(entriesList)))
+    if bShowPwd:
+        print(name, end="")
+    if bShowQty:
+        if bShowPwd:
+            print("   ", end="")
+        print("Entries: " + str(len(entriesList)), end="")
+    if bShowPwd or bShowQty:
+        print("")
 
     displayCols = terminalCols // maxNameLen
 
     if bFiles:
-        print("")
-        print("Files: " + str(len(filesList)))
+        if not bBrief:
+            print("")
+
+        if bShowQty:
+            print("Files: " + str(len(filesList)))
 
         if len(filesList) > 0 and not bCountOnly:
-            print("")
-            colCount = 0
-            for file in filesList:
-                colCount += 1
-
-                print(file, end='')
-
-                if colCount < displayCols:
-                    fillChars = (maxNameLen - len(file))
-                    print(' ' * fillChars, end='')
-                    needNewLine = True
-                else:
-                    colCount = 0
-                    print("")
-                    needNewLine = False
-
-            if needNewLine:
+            if not bBrief:
                 print("")
+
+            if bSingleCol:
+                for file in filesList:
+                    print(file)
+            else:
+                colCount = 0
+                for file in filesList:
+                    colCount += 1
+
+                    print(file, end='')
+
+                    if colCount < displayCols:
+                        fillChars = (maxNameLen - len(file))
+                        print(' ' * fillChars, end='')
+                        needNewLine = True
+                    else:
+                        colCount = 0
+                        print("")
+                        needNewLine = False
+
+                if needNewLine:
+                    print("")
 
     if bDirs:
-        print("")
-        print("Directories: " + str(len(dirsList)))
+        if not bBrief:
+            print("")
+
+        if bShowQty:
+            print("Directories: " + str(len(dirsList)))
 
         if len(dirsList) > 0 and not bCountOnly:
-            print("")
-            colCount = 0
-            for directory in dirsList:
-                colCount += 1
-
-                print(directory, end='')
-                if colCount < displayCols:
-                    fillChars = (maxNameLen - len(directory))
-                    print(' ' * fillChars, end='')
-                    needNewLine = True
-                else:
-                    colCount = 0
-                    print("")
-                    needNewLine = False
-
-            if needNewLine:
+            if not bBrief:
                 print("")
 
-print("")
+            if bSingleCol:
+                for directory in dirsList:
+                    print(directory)
+            else:
+                colCount = 0
+                for directory in dirsList:
+                    colCount += 1
+
+                    print(directory, end='')
+                    if colCount < displayCols:
+                        fillChars = (maxNameLen - len(directory))
+                        print(' ' * fillChars, end='')
+                        needNewLine = True
+                    else:
+                        colCount = 0
+                        print("")
+                        needNewLine = False
+
+                if needNewLine:
+                    print("")
+
+if not bBrief:
+    print("")
