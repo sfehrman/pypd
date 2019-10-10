@@ -7,7 +7,9 @@ import operator
 
 VERSION = "1.0.0"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
+_mode = "mode"
 _name = "name"
+_size = "size"
 terminalCols = 0
 padChars = 3
 maxNameLen = 1
@@ -18,6 +20,7 @@ dirsList = []
 inputList = []
 argsList = []
 namesList = []
+sortBy = _name
 bFiles = True
 bDirs = True
 bCountOnly = False  # do not show the files / dirs, just the count data
@@ -29,6 +32,8 @@ bShowName = True
 bShowPwd = True  # show the directory path
 bShowQty = True  # show the quantities for Entries, Files, Directories
 bSortReverse = False
+bDisplayDetail = False
+bColSize = False
 
 """
 Dictionary for an Entry:
@@ -76,8 +81,8 @@ def show_help():
     exit(0)
 
 
-def sort_entries(random_list, sort_key):
-    return sorted(random_list, key=operator.itemgetter(sort_key), reverse=bSortReverse)
+def sort_entries(random_list):
+    return sorted(random_list, key=operator.itemgetter(sortBy), reverse=bSortReverse)
 
 
 def display_default(data_list):
@@ -110,6 +115,37 @@ def display_default(data_list):
         if newline:
             print("")
     return
+
+
+def display_details(data_list):
+
+    if not bBrief:
+        print("")
+
+        print("Name:", end='')
+        print(' ' * (maxNameLen - 5), end='')
+
+        if bColSize:
+            print("Size (bytes):", end='')
+
+        print("")
+
+        print("-" * terminalCols)
+
+    for data in data_list:
+        print(data[_name], end='')
+
+        fill = (maxNameLen - len(data[_name]))
+        print(' ' * fill, end='')
+
+        if bColSize:
+            print(' ' * (13 - len(str(data[_size]))), end='')
+            print(str(data[_size]), end='')
+
+        print("")
+
+    return
+
 
 # --------
 # processing
@@ -166,12 +202,20 @@ for flag, option in argsList:
         for subopt in option.split(","):
             if subopt.lower() == "rev":
                 bSortReverse = True
+            elif subopt.lower() == "size":
+                sortBy = _size
+                bColSize = True
+                bDisplayDetail = True
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-s'")
                 exit(1)
 
     elif flag == "-C":
         bSingleCol = True
+
+    elif flag == "-S":
+        bColSize = True
+        bDisplayDetail = True
 
 if len(namesList) == 0:
     namesList.append(".")
@@ -211,10 +255,25 @@ for name in namesList:
         if entry.startswith(".") and not bShowDot:
             continue
 
-        if os.path.isdir(name + "/" + entry):
-            dirsList.append({_name: entry})
+        pathname = os.path.join(name, entry)
+        mode = os.stat(pathname).st_mode
+        size = os.stat(pathname).st_size
+
+        # print("mode: " + str(mode))  # debug
+
+        if os.path.isdir(pathname):
+            dirsList.append({
+                _name: entry,
+                _mode: mode,
+                _size: size
+            })
         else:
-            filesList.append({_name: entry})
+            # print("size: " + str(size))  # debug
+            filesList.append({
+                _name: entry,
+                _mode: mode,
+                _size: size
+            })
 
         if (len(entry) + padChars) > maxNameLen:
             maxNameLen = len(entry) + padChars
@@ -238,9 +297,12 @@ for name in namesList:
             print("Files: " + str(len(filesList)))
 
         if len(filesList) > 0 and not bCountOnly:
-            sortedList = sort_entries(filesList, _name)
+            sortedList = sort_entries(filesList)
 
-            display_default(sortedList)
+            if bDisplayDetail:
+                display_details(sortedList)
+            else:
+                display_default(sortedList)
 
     if bDirs:
         if not bBrief:
@@ -250,9 +312,12 @@ for name in namesList:
             print("Directories: " + str(len(dirsList)))
 
         if len(dirsList) > 0 and not bCountOnly:
-            sortedList = sort_entries(dirsList, _name)
+            sortedList = sort_entries(dirsList)
 
-            display_default(sortedList)
+            if bDisplayDetail:
+                display_details(sortedList)
+            else:
+                display_default(sortedList)
 
 if not bBrief:
     print("")
