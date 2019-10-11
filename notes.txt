@@ -1,1 +1,6 @@
-this is note one
+bash shell functions that have been useful.  Add these to .bash_profile
+
+function l() { clear ; pd -d ymd $* | more -E ; }
+function ll() { clear ; pd -d ymd,dtm -S -p $* | more -E ; }
+function up() { cd .. ; clear ; pd -d ymd $* | more -E ; }
+
