@@ -9,20 +9,20 @@ import time
 VERSION = "1.0.0"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
 _accessed = "accessed"
+_inode = "inode"
+_link = "link"
 _mode = "mode"
 _modified = "modified"
 _name = "name"
 _size = "size"
 _stat = "stat"
 _status = "status"
-# terminalCols = 0
 padChars = 3
 maxNameLen = 1
 displayCols = 0
 entriesList = []
 filesList = []
 dirsList = []
-# inputList = []
 argsList = []
 namesList = []
 sortBy = _name
@@ -42,10 +42,14 @@ bColSize = False
 bColDTM = False  # show Date Time modified
 bColDTA = False  # show Date Time accessed
 bColDTS = False  # show Date Time status changed (chmod)
+bColInode = False  # show Inode number
+bColLink = False  # show link count
 dateFormatYMD = '%Y-%m-%d %H:%M:%S'
 dateFormatMDY = '%m-%d-%Y %H:%M:%S'
 dateFormatDMY = '%d-%m-%Y %H:%M:%S'
 dateFormat = dateFormatYMD
+unitDivide = 1  # byte = 1, KB = 1000 ** 1, MB = 1000 ** 2, GB = 1000 ** 3
+unitText = ""
 
 
 # --------
@@ -98,10 +102,19 @@ def get_entry(entry_name, path_name):
     entry_stat = os.stat(pathname)
 
     entry_data.update({_name: entry_name})
-    entry_data.update({_size: entry_stat.st_size})
-    entry_data.update({_modified: entry_stat.st_mtime})
-    entry_data.update({_accessed: entry_stat.st_atime})
-    entry_data.update({_status: entry_stat.st_ctime})
+
+    if bColSize:
+        entry_data.update({_size: entry_stat.st_size})
+    if bColDTM:
+        entry_data.update({_modified: entry_stat.st_mtime})
+    if bColDTA:
+        entry_data.update({_accessed: entry_stat.st_atime})
+    if bColDTS:
+        entry_data.update({_status: entry_stat.st_ctime})
+    if bColInode:
+        entry_data.update({_inode: entry_stat.st_ino})
+    if bColLink:
+        entry_data.update({_link: entry_stat.st_nlink})
 
     # print("entry_data: " + str(entry_data))  # debug
 
@@ -152,7 +165,13 @@ def display_details(data_list):
         print("Name" + ' ' * (maxNameLen - 4), end='')
 
         if bColSize:
-            print(' ' * 1 + "Size (bytes)", end='')
+            print(' ' * (16-len(unitText)) + unitText, end='')
+
+        if bColInode:
+            print(' ' * 7 + 'Inode', end='')
+
+        if bColLink:
+            print(' ' * 3 + 'Links', end='')
 
         if bColDTM:
             print(' ' * padChars + 'Modified' + ' ' * 11, end='')
@@ -175,7 +194,14 @@ def display_details(data_list):
 
         if bColSize:
             # print(' ' * (13 - len(str(data[_size]))), end='')
-            print(' ' * (13 - len(str(data[_size]))) + str(data[_size]), end='')
+            size = data[_size] // unitDivide
+            print(' ' * (16 - len(str(size))) + str(size), end='')
+
+        if bColInode:
+            print(' ' * (12 - len(str(data[_inode]))) + str(data[_inode]), end='')
+
+        if bColLink:
+            print(' ' * (8 - len(str(data[_link]))) + str(data[_link]), end='')
 
         if bColDTM:
             # print(' ' * padChars, end='')
@@ -218,21 +244,18 @@ for flag, option in argsList:
     elif flag == "-c":
         bCountOnly = True
     elif flag == "-d":
+        bDisplayDetail = True
         for subopt in option.split(","):
             if subopt == "dtm":
                 bColDTM = True
-                bDisplayDetail = True
             elif subopt == "dta":
                 bColDTA = True
-                bDisplayDetail = True
             elif subopt == "dts":
                 bColDTS = True
-                bDisplayDetail = True
             elif subopt == "all":
                 bColDTM = True
                 bColDTA = True
                 bColDTS = True
-                bDisplayDetail = True
             elif subopt == "mdy":
                 dateFormat = dateFormatMDY
             elif subopt == "dmy":
@@ -244,6 +267,8 @@ for flag, option in argsList:
                 exit(1)
     elif flag == "-h":
         show_help()
+    elif flag == "-i":
+        bColInode = True
     elif flag == "-t":
         if option.lower().startswith("f"):
             bFiles = True
@@ -270,33 +295,57 @@ for flag, option in argsList:
                 print("Unknown sub option '" + subopt + "' for switch '-n'")
                 exit(1)
     elif flag == "-s":
+        bDisplayDetail = True
         for subopt in option.split(","):
             if subopt.lower() == "rev":
                 bSortReverse = True
             elif subopt.lower() == "size":
                 sortBy = _size
                 bColSize = True
-                bDisplayDetail = True
             elif subopt.lower() == "dtm":
                 sortBy = _modified
                 bColDTM = True
-                bDisplayDetail = True
             elif subopt.lower() == "dta":
                 sortBy = _accessed
                 bColDTA = True
-                bDisplayDetail = True
             elif subopt.lower() == "dts":
                 sortBy = _status
                 bColDTS = True
-                bDisplayDetail = True
+            elif subopt.lower() == "inode":
+                sortBy = _inode
+                bColInode = True
+            elif subopt.lower() == "link":
+                sortBy = _link
+                bColLink = True
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-s'")
                 exit(1)
-
+    elif flag == "-u":
+        bDisplayDetail = True
+        bColSize = True
+        for subopt in option.split(","):
+            if subopt.lower() == "b":
+                unitDivide = 1
+                unitText = "Size (Bytes)"
+            elif subopt.lower() == "k":
+                unitDivide = 1000 ** 1
+                unitText = "Size (KBytes)"
+            elif subopt.lower() == "m":
+                unitDivide = 1000 ** 2
+                unitText = "Size (MBytes)"
+            elif subopt.lower() == "g":
+                unitDivide = 1000 ** 3
+                unitText = "Size (GBytes)"
+            else:
+                print("Unkown sub option '" + subopt + "' for switch '-u'")
+                exit(1)
     elif flag == "-C":
         bSingleCol = True
-
+    elif flag == "-L":
+        bColLink = True
     elif flag == "-S":
+        unitDivide = 1
+        unitText = "Size (Bytes)"
         bColSize = True
         bDisplayDetail = True
 
