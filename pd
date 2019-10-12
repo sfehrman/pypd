@@ -122,7 +122,10 @@ def get_entry(entry_name, path_name):
 
 
 def sort_entries(random_list):
-    return sorted(random_list, key=operator.itemgetter(sortBy), reverse=bSortReverse)
+    if len(sortBy) == 0:
+        return random_list
+    else:
+        return sorted(random_list, key=operator.itemgetter(sortBy), reverse=bSortReverse)
 
 
 def display_default(data_list):
@@ -244,18 +247,21 @@ for flag, option in argsList:
     elif flag == "-c":
         bCountOnly = True
     elif flag == "-d":
-        bDisplayDetail = True
         for subopt in option.split(","):
             if subopt == "dtm":
                 bColDTM = True
+                bDisplayDetail = True
             elif subopt == "dta":
                 bColDTA = True
+                bDisplayDetail = True
             elif subopt == "dts":
                 bColDTS = True
+                bDisplayDetail = True
             elif subopt == "all":
                 bColDTM = True
                 bColDTA = True
                 bColDTS = True
+                bDisplayDetail = True
             elif subopt == "mdy":
                 dateFormat = dateFormatMDY
             elif subopt == "dmy":
@@ -269,6 +275,7 @@ for flag, option in argsList:
         show_help()
     elif flag == "-i":
         bColInode = True
+        bDisplayDetail = True
     elif flag == "-t":
         if option.lower().startswith("f"):
             bFiles = True
@@ -295,28 +302,35 @@ for flag, option in argsList:
                 print("Unknown sub option '" + subopt + "' for switch '-n'")
                 exit(1)
     elif flag == "-s":
-        bDisplayDetail = True
         for subopt in option.split(","):
-            if subopt.lower() == "rev":
+            if subopt.lower() == "none":
+                sortBy = ""
+            elif subopt.lower() == "rev":
                 bSortReverse = True
             elif subopt.lower() == "size":
                 sortBy = _size
                 bColSize = True
+                bDisplayDetail = True
             elif subopt.lower() == "dtm":
                 sortBy = _modified
                 bColDTM = True
+                bDisplayDetail = True
             elif subopt.lower() == "dta":
                 sortBy = _accessed
                 bColDTA = True
+                bDisplayDetail = True
             elif subopt.lower() == "dts":
                 sortBy = _status
                 bColDTS = True
+                bDisplayDetail = True
             elif subopt.lower() == "inode":
                 sortBy = _inode
                 bColInode = True
+                bDisplayDetail = True
             elif subopt.lower() == "link":
                 sortBy = _link
                 bColLink = True
+                bDisplayDetail = True
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-s'")
                 exit(1)
@@ -343,6 +357,7 @@ for flag, option in argsList:
         bSingleCol = True
     elif flag == "-L":
         bColLink = True
+        bDisplayDetail = True
     elif flag == "-S":
         unitDivide = 1
         unitText = "Size (Bytes)"
