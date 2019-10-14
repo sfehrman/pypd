@@ -9,6 +9,7 @@ import time
 VERSION = "1.0.0"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
 _accessed = "accessed"
+_blocks = "blocks"
 _inode = "inode"
 _link = "link"
 _mode = "mode"
@@ -17,6 +18,7 @@ _name = "name"
 _size = "size"
 _stat = "stat"
 _status = "status"
+_symbolic = "symbolic"
 padChars = 3
 maxNameLen = 1
 displayCols = 0
@@ -44,6 +46,7 @@ bColDTA = False  # show Date Time accessed
 bColDTS = False  # show Date Time status changed (chmod)
 bColInode = False  # show Inode number
 bColLink = False  # show link count
+bColBlocks = False  # show blocks allocated
 dateFormatYMD = '%Y-%m-%d %H:%M:%S'
 dateFormatMDY = '%m-%d-%Y %H:%M:%S'
 dateFormatDMY = '%d-%m-%Y %H:%M:%S'
@@ -99,12 +102,17 @@ def get_entry(entry_name, path_name):
     }
     """
 
-    entry_stat = os.stat(pathname)
+    entry_stat = os.stat(path_name)
 
     entry_data.update({_name: entry_name})
 
+    if os.path.islink(path_name):
+        entry_data.update({_symbolic: os.readlink(path_name)})
+
     if bColSize:
         entry_data.update({_size: entry_stat.st_size})
+    if bColBlocks:
+        entry_data.update({_blocks: entry_stat.st_blocks})
     if bColDTM:
         entry_data.update({_modified: entry_stat.st_mtime})
     if bColDTA:
@@ -170,6 +178,9 @@ def display_details(data_list):
         if bColSize:
             print(' ' * (16-len(unitText)) + unitText, end='')
 
+        if bColBlocks:
+            print(' ' * 6 + 'Blocks', end='')
+
         if bColInode:
             print(' ' * 7 + 'Inode', end='')
 
@@ -200,6 +211,9 @@ def display_details(data_list):
             size = data[_size] // unitDivide
             print(' ' * (16 - len(str(size))) + str(size), end='')
 
+        if bColBlocks:
+            print(' ' * (12 - len(str(data[_blocks]))) + str(data[_blocks]), end='')
+
         if bColInode:
             print(' ' * (12 - len(str(data[_inode]))) + str(data[_inode]), end='')
 
@@ -216,6 +230,9 @@ def display_details(data_list):
 
         if bColDTS:
             print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_status]))), end='')
+
+        if _symbolic in data:
+            print(' -> ' + data[_symbolic], end='')
 
         print("")
 
@@ -353,6 +370,9 @@ for flag, option in argsList:
             else:
                 print("Unkown sub option '" + subopt + "' for switch '-u'")
                 exit(1)
+    elif flag == "-B":
+        bColBlocks = True
+        bDisplayDetail = True
     elif flag == "-C":
         bSingleCol = True
     elif flag == "-L":
