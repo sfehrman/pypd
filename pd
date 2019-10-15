@@ -6,12 +6,16 @@ import sys
 import operator
 import time
 
+from stat import *
+
 VERSION = "1.0.0"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
 _accessed = "accessed"
 _blocks = "blocks"
+_error = "error"
 _inode = "inode"
 _link = "link"
+_message = "message"
 _mode = "mode"
 _modified = "modified"
 _name = "name"
@@ -48,6 +52,7 @@ bColDTS = False  # show Date Time status changed (chmod)
 bColInode = False  # show Inode number
 bColLink = False  # show link count
 bColBlocks = False  # show blocks allocated
+bColType = False  # show the file type
 dateFormatYMD = '%Y-%m-%d %H:%M:%S'
 dateFormatMDY = '%m-%d-%Y %H:%M:%S'
 dateFormatDMY = '%d-%m-%Y %H:%M:%S'
@@ -91,9 +96,10 @@ def show_help():
 
 def get_entry(entry_name, path_name):
     entry_data = {}
-    # bFound = False
-    bLink = False
+    is_error = False
+    is_link = False
     link_info = ""
+    err_msg = ""
 
     """
     Dictionary for an Entry:
@@ -110,39 +116,52 @@ def get_entry(entry_name, path_name):
 
     entry_data.update({_name: entry_name})
 
-    if os.path.exists(path_name):
-        if os.path.islink(path_name):
-            bLink = True
-            if bShowLink:
-                entry_stat = os.lstat(path_name)
-                link_info = "(Link Data)"
+    try:
+        if os.path.exists(path_name):
+            if os.path.islink(path_name):
+                is_link = True
+                if bShowLink:
+                    entry_stat = os.lstat(path_name)
+                    link_info = "(Link Data)"
+                else:
+                    entry_stat = os.stat(path_name)
+                    link_info = os.readlink(path_name)
             else:
                 entry_stat = os.stat(path_name)
-                link_info = os.readlink(path_name)
-        else:
-            entry_stat = os.stat(path_name)
-    else:  # might be a broken symbolic link try "lstat()"
-        entry_stat = os.lstat(path_name)
-        bLink = True
-        link_info = "(Bad Link) " + os.readlink(path_name)
+        else:  # might be a broken symbolic link try "lstat()"
+            entry_stat = os.lstat(path_name)
+            is_link = True
+            link_info = "(Bad Link) " + os.readlink(path_name)
+    except OSError as e:
+        is_error = True
+        err_msg = str(e)
 
-    if bLink:
-        entry_data.update({_symbolic: link_info})
+    if is_error:
+        entry_data.update({_error: True})
 
-    if bColSize:
-        entry_data.update({_size: entry_stat.st_size})
-    if bColBlocks:
-        entry_data.update({_blocks: entry_stat.st_blocks})
-    if bColDTM:
-        entry_data.update({_modified: entry_stat.st_mtime})
-    if bColDTA:
-        entry_data.update({_accessed: entry_stat.st_atime})
-    if bColDTS:
-        entry_data.update({_status: entry_stat.st_ctime})
-    if bColInode:
-        entry_data.update({_inode: entry_stat.st_ino})
-    if bColLink:
-        entry_data.update({_link: entry_stat.st_nlink})
+        entry_data.update({_message: err_msg})
+    else:
+        entry_data.update({_error: False})
+
+        if is_link:
+            entry_data.update({_symbolic: link_info})
+
+        if bColSize:
+            entry_data.update({_size: entry_stat.st_size})
+        if bColBlocks:
+            entry_data.update({_blocks: entry_stat.st_blocks})
+        if bColDTM:
+            entry_data.update({_modified: entry_stat.st_mtime})
+        if bColDTA:
+            entry_data.update({_accessed: entry_stat.st_atime})
+        if bColDTS:
+            entry_data.update({_status: entry_stat.st_ctime})
+        if bColInode:
+            entry_data.update({_inode: entry_stat.st_ino})
+        if bColLink:
+            entry_data.update({_link: entry_stat.st_nlink})
+        if bColType:
+            entry_data.update({_mode: entry_stat.st_mode})
 
     # print("entry_data: " + str(entry_data))  # debug
 
@@ -216,6 +235,9 @@ def display_details(data_list):
         if bColDTS:
             print(' ' * padChars + 'Status Changed' + ' ' * 5, end='')
 
+        if bColType:
+            print(' ' * padChars + 'Type' + ' ' * 12, end='')
+
         print("")
 
         print("-" * terminalCols)
@@ -226,33 +248,55 @@ def display_details(data_list):
         fill = (maxNameLen - len(data[_name]))
         print(' ' * fill, end='')
 
-        if bColSize:
-            # print(' ' * (13 - len(str(data[_size]))), end='')
-            size = data[_size] // unitDivide
-            print(' ' * (16 - len(str(size))) + str(size), end='')
+        if data[_error]:
+            print(' ' * padChars + data[_message])
+        else:
+            if bColSize:
+                # print(' ' * (13 - len(str(data[_size]))), end='')
+                size = data[_size] // unitDivide
+                print(' ' * (16 - len(str(size))) + str(size), end='')
 
-        if bColBlocks:
-            print(' ' * (12 - len(str(data[_blocks]))) + str(data[_blocks]), end='')
+            if bColBlocks:
+                print(' ' * (12 - len(str(data[_blocks]))) + str(data[_blocks]), end='')
 
-        if bColInode:
-            print(' ' * (12 - len(str(data[_inode]))) + str(data[_inode]), end='')
+            if bColInode:
+                print(' ' * (12 - len(str(data[_inode]))) + str(data[_inode]), end='')
 
-        if bColLink:
-            print(' ' * (8 - len(str(data[_link]))) + str(data[_link]), end='')
+            if bColLink:
+                print(' ' * (8 - len(str(data[_link]))) + str(data[_link]), end='')
 
-        if bColDTM:
-            # print(' ' * padChars, end='')
-            # print(str(time.ctime(data[_modified])), end='')
-            print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_modified]))), end='')
+            if bColDTM:
+                # print(' ' * padChars, end='')
+                # print(str(time.ctime(data[_modified])), end='')
+                print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_modified]))), end='')
 
-        if bColDTA:
-            print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_accessed]))), end='')
+            if bColDTA:
+                print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_accessed]))), end='')
 
-        if bColDTS:
-            print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_status]))), end='')
+            if bColDTS:
+                print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_status]))), end='')
 
-        if _symbolic in data:
-            print(' -> ' + data[_symbolic], end='')
+            if bColType:
+                print(' ' * padChars, end='')
+                if S_ISLNK(data[_mode]):
+                    print('Symbolic Link   ', end='')
+                elif S_ISCHR(data[_mode]):
+                    print('Character Device', end='')
+                elif S_ISBLK(data[_mode]):
+                    print('Block Device    ', end='')
+                elif S_ISFIFO(data[_mode]):
+                    print('FIFO            ', end='')
+                elif S_ISREG(data[_mode]):
+                    print('Regular File    ', end='')
+                elif S_ISSOCK(data[_mode]):
+                    print('Socket          ', end='')
+                elif S_ISDOOR(data[_mode]):
+                    print('Door            ', end='')
+                if S_ISDIR(data[_mode]):
+                    print('Directory       ', end='')
+
+            if _symbolic in data:
+                print(' -> ' + data[_symbolic], end='')
 
         print("")
 
@@ -404,6 +448,9 @@ for flag, option in argsList:
         unitDivide = 1
         unitText = "Size (Bytes)"
         bColSize = True
+        bDisplayDetail = True
+    elif flag == "-T":
+        bColType = True
         bDisplayDetail = True
 
 if len(namesList) == 0:
