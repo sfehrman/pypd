@@ -38,6 +38,7 @@ bShowHdr = True  # show column headers with alternate output format
 bShowName = True
 bShowPwd = True  # show the directory path
 bShowQty = True  # show the quantities for Entries, Files, Directories
+bShowLink = False  # show symbolic link info, not what link points to
 bSortReverse = False
 bDisplayDetail = False
 bColSize = False
@@ -90,11 +91,16 @@ def show_help():
 
 def get_entry(entry_name, path_name):
     entry_data = {}
+    # bFound = False
+    bLink = False
+    link_info = ""
 
     """
     Dictionary for an Entry:
     {
       "name": "foo",
+      "symbolic": "../../real/file" | "(Broken Link)" | "(Link Info)",
+      "link": True,
       "size": 1234,
       "modified": "date/time",
       "accessed": "date/time",
@@ -102,12 +108,26 @@ def get_entry(entry_name, path_name):
     }
     """
 
-    entry_stat = os.stat(path_name)
-
     entry_data.update({_name: entry_name})
 
-    if os.path.islink(path_name):
-        entry_data.update({_symbolic: os.readlink(path_name)})
+    if os.path.exists(path_name):
+        if os.path.islink(path_name):
+            bLink = True
+            if bShowLink:
+                entry_stat = os.lstat(path_name)
+                link_info = "(Link Data)"
+            else:
+                entry_stat = os.stat(path_name)
+                link_info = os.readlink(path_name)
+        else:
+            entry_stat = os.stat(path_name)
+    else:  # might be a broken symbolic link try "lstat()"
+        entry_stat = os.lstat(path_name)
+        bLink = True
+        link_info = "(Bad Link) " + os.readlink(path_name)
+
+    if bLink:
+        entry_data.update({_symbolic: link_info})
 
     if bColSize:
         entry_data.update({_size: entry_stat.st_size})
@@ -293,16 +313,8 @@ for flag, option in argsList:
     elif flag == "-i":
         bColInode = True
         bDisplayDetail = True
-    elif flag == "-t":
-        if option.lower().startswith("f"):
-            bFiles = True
-            bDirs = False
-        elif option.lower().startswith("d"):
-            bFiles = False
-            bDirs = True
-        else:
-            print("Invalid value '" + option + "' for switch '-t'")
-            exit(1)
+    elif flag == "-l":
+        bShowLink = True
     elif flag == "-n":
         for subopt in option.split(","):
             if subopt.lower() == "dot":
@@ -351,6 +363,16 @@ for flag, option in argsList:
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-s'")
                 exit(1)
+    elif flag == "-t":
+        if option.lower().startswith("f"):
+            bFiles = True
+            bDirs = False
+        elif option.lower().startswith("d"):
+            bFiles = False
+            bDirs = True
+        else:
+            print("Invalid value '" + option + "' for switch '-t'")
+            exit(1)
     elif flag == "-u":
         bDisplayDetail = True
         bColSize = True

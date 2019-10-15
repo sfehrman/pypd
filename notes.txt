@@ -6,32 +6,5 @@ function up() { cd .. ; clear ; pd -d ymd $* | more -E ; }
 
 errors:
 --------
-pd
-
-Traceback (most recent call last):
-  File "/usr/local/bin/pd", line 430, in <module>
-    filesList.append(get_entry(entry, pathname))
-  File "/usr/local/bin/pd", line 105, in get_entry
-    entry_stat = os.stat(path_name)
-FileNotFoundError: [Errno 2] No such file or directory: '/Library/Frameworks/AEProfiling.framework'
-
-pwd
-/Library/Frameworks
-
-ls -la
-total 32
-drwxr-xr-x   8 root  wheel   272 May 19 18:28 .
-drwxr-xr-x+ 67 root  wheel  2278 Oct 10 09:58 ..
-lrwxr-xr-x   1 root  wheel    71 Jan 11  2017 AEProfiling.framework -> ../../Applications/Motion.app/Contents/Frameworks/AEProfiling.framework
-lrwxr-xr-x   1 root  wheel    74 Jan 11  2017 AERegistration.framework -> ../../Applications/Motion.app/Contents/Frameworks/AERegistration.framework
-lrwxr-xr-x   1 root  wheel    74 Jan 11  2017 AudioMixEngine.framework -> ../../Applications/Motion.app/Contents/Frameworks/AudioMixEngine.framework
-lrwxr-xr-x   1 root  wheel    60 Jan 11  2017 NyxAudioAnalysis.framework -> /System/Library/PrivateFrameworks/NyxAudioAnalysis.framework
-drwxr-xr-x   5 root  wheel   170 Jan 11  2017 PluginManager.framework
-drwxr-xr-x   8 root  wheel   272 May 19 18:28 iTunesLibrary.framework
-
-ls -la ../../Applications/Motion.app/Contents/Frameworks/AEProfiling.framework
-ls: ../../Applications/Motion.app/Contents/Frameworks/AEProfiling.framework: No such file or directory
-
-It's a BAD LINK / BROKEN LINK ... need to check / handle this ... display string (Broken Link) on detail display
 
 --------
