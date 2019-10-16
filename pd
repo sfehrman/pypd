@@ -23,42 +23,43 @@ _size = "size"
 _stat = "stat"
 _status = "status"
 _symbolic = "symbolic"
-padChars = 3
-maxNameLen = 1
-displayCols = 0
-entriesList = []
-filesList = []
-dirsList = []
-argsList = []
-namesList = []
-sortBy = _name
-bFiles = True
-bDirs = True
-bCountOnly = False  # do not show the files / dirs, just the count data
-bBrief = False  # do not print extra blank lines
-bSingleCol = False  # show files / directories in a single column
-bShowDot = True  # show hidden files (name begins with a dot)
-bShowHdr = True  # show column headers with alternate output format
-bShowName = True
-bShowPwd = True  # show the directory path
-bShowQty = True  # show the quantities for Entries, Files, Directories
-bShowLink = False  # show symbolic link info, not what link points to
-bSortReverse = False
-bDisplayDetail = False
-bColSize = False
-bColDTM = False  # show Date Time modified
-bColDTA = False  # show Date Time accessed
-bColDTS = False  # show Date Time status changed (chmod)
-bColInode = False  # show Inode number
-bColLink = False  # show link count
-bColBlocks = False  # show blocks allocated
-bColType = False  # show the file type
-dateFormatYMD = '%Y-%m-%d %H:%M:%S'
-dateFormatMDY = '%m-%d-%Y %H:%M:%S'
-dateFormatDMY = '%d-%m-%Y %H:%M:%S'
-dateFormat = dateFormatYMD
-unitDivide = 1  # byte = 1, KB = 1000 ** 1, MB = 1000 ** 2, GB = 1000 ** 3
-unitText = ""
+pad_chars = 3
+max_name_len = 1
+display_columns = 0
+entries_list = []
+files_list = []
+dirs_list = []
+args_list = []
+names_list = []
+sort_by = _name
+show_files = True
+show_dirs = True
+use_count_only = False  # do not show the files / dirs, just the count data
+use_brief = False  # do not print extra blank lines
+use_single_col = False  # show files / directories in a single column
+use_detail = False
+use_reverse = False
+show_dot = True  # show hidden files (name begins with a dot)
+show_hdr = True  # show column headers with alternate output format
+show_name = True
+show_pwd = True  # show the directory path
+show_qty = True  # show the quantities for Entries, Files, Directories
+show_link = False  # show symbolic link info, not what link points to
+display_col_size = False
+display_col_dtm = False  # show Date Time modified
+display_col_dta = False  # show Date Time accessed
+display_col_dts = False  # show Date Time status changed (chmod)
+display_col_inode = False  # show Inode number
+display_col_link = False  # show link count
+display_col_blocks = False  # show blocks allocated
+display_col_type = False  # show the file type
+need_mode = False
+date_format_YMD = '%Y-%m-%d %H:%M:%S'
+date_format_MDY = '%m-%d-%Y %H:%M:%S'
+date_format_DMY = '%d-%m-%Y %H:%M:%S'
+date_format = date_format_YMD
+unit_divide = 1  # byte = 1, KB = 1000 ** 1, MB = 1000 ** 2, GB = 1000 ** 3
+unit_text = ""
 
 
 # --------
@@ -120,7 +121,7 @@ def get_entry(entry_name, path_name):
         if os.path.exists(path_name):
             if os.path.islink(path_name):
                 is_link = True
-                if bShowLink:
+                if show_link:
                     entry_stat = os.lstat(path_name)
                     link_info = "(Link Data)"
                 else:
@@ -146,21 +147,21 @@ def get_entry(entry_name, path_name):
         if is_link:
             entry_data.update({_symbolic: link_info})
 
-        if bColSize:
+        if display_col_size:
             entry_data.update({_size: entry_stat.st_size})
-        if bColBlocks:
+        if display_col_blocks:
             entry_data.update({_blocks: entry_stat.st_blocks})
-        if bColDTM:
+        if display_col_dtm:
             entry_data.update({_modified: entry_stat.st_mtime})
-        if bColDTA:
+        if display_col_dta:
             entry_data.update({_accessed: entry_stat.st_atime})
-        if bColDTS:
+        if display_col_dts:
             entry_data.update({_status: entry_stat.st_ctime})
-        if bColInode:
+        if display_col_inode:
             entry_data.update({_inode: entry_stat.st_ino})
-        if bColLink:
+        if display_col_link:
             entry_data.update({_link: entry_stat.st_nlink})
-        if bColType:
+        if need_mode:
             entry_data.update({_mode: entry_stat.st_mode})
 
     # print("entry_data: " + str(entry_data))  # debug
@@ -169,10 +170,10 @@ def get_entry(entry_name, path_name):
 
 
 def sort_entries(random_list):
-    if len(sortBy) == 0:
+    if len(sort_by) == 0:
         return random_list
     else:
-        return sorted(random_list, key=operator.itemgetter(sortBy), reverse=bSortReverse)
+        return sorted(random_list, key=operator.itemgetter(sort_by), reverse=use_reverse)
 
 
 def display_default(data_list):
@@ -180,10 +181,10 @@ def display_default(data_list):
     fill = 0
     newline = False
 
-    if not bBrief:
+    if not use_brief:
         print("")
 
-    if bSingleCol:
+    if use_single_col:
         for data in data_list:
             print(data[_name])
     else:
@@ -193,8 +194,8 @@ def display_default(data_list):
 
             print(data[_name], end='')
 
-            if count < displayCols:
-                fill = (maxNameLen - len(data[_name]))
+            if count < display_columns:
+                fill = (max_name_len - len(data[_name]))
                 print(' ' * fill, end='')
                 newline = True
             else:
@@ -209,34 +210,34 @@ def display_default(data_list):
 
 def display_details(data_list):
 
-    if not bBrief:
+    if not use_brief:
         print("")
 
-        print("Name" + ' ' * (maxNameLen - 4), end='')
+        print("Name" + ' ' * (max_name_len - 4), end='')
 
-        if bColSize:
-            print(' ' * (16-len(unitText)) + unitText, end='')
+        if display_col_size:
+            print(' ' * (16 - len(unit_text)) + unit_text, end='')
 
-        if bColBlocks:
+        if display_col_blocks:
             print(' ' * 6 + 'Blocks', end='')
 
-        if bColInode:
+        if display_col_inode:
             print(' ' * 7 + 'Inode', end='')
 
-        if bColLink:
+        if display_col_link:
             print(' ' * 3 + 'Links', end='')
 
-        if bColDTM:
-            print(' ' * padChars + 'Modified' + ' ' * 11, end='')
+        if display_col_dtm:
+            print(' ' * pad_chars + 'Modified' + ' ' * 11, end='')
 
-        if bColDTA:
-            print(' ' * padChars + 'Accessed' + ' ' * 11, end='')
+        if display_col_dta:
+            print(' ' * pad_chars + 'Accessed' + ' ' * 11, end='')
 
-        if bColDTS:
-            print(' ' * padChars + 'Status Changed' + ' ' * 5, end='')
+        if display_col_dts:
+            print(' ' * pad_chars + 'Status Changed' + ' ' * 5, end='')
 
-        if bColType:
-            print(' ' * padChars + 'Type' + ' ' * 12, end='')
+        if display_col_type:
+            print(' ' * pad_chars + 'Type' + ' ' * 12, end='')
 
         print("")
 
@@ -245,39 +246,39 @@ def display_details(data_list):
     for data in data_list:
         print(data[_name], end='')
 
-        fill = (maxNameLen - len(data[_name]))
+        fill = (max_name_len - len(data[_name]))
         print(' ' * fill, end='')
 
         if data[_error]:
-            print(' ' * padChars + data[_message])
+            print(' ' * pad_chars + data[_message])
         else:
-            if bColSize:
+            if display_col_size:
                 # print(' ' * (13 - len(str(data[_size]))), end='')
-                size = data[_size] // unitDivide
+                size = data[_size] // unit_divide
                 print(' ' * (16 - len(str(size))) + str(size), end='')
 
-            if bColBlocks:
+            if display_col_blocks:
                 print(' ' * (12 - len(str(data[_blocks]))) + str(data[_blocks]), end='')
 
-            if bColInode:
+            if display_col_inode:
                 print(' ' * (12 - len(str(data[_inode]))) + str(data[_inode]), end='')
 
-            if bColLink:
+            if display_col_link:
                 print(' ' * (8 - len(str(data[_link]))) + str(data[_link]), end='')
 
-            if bColDTM:
+            if display_col_dtm:
                 # print(' ' * padChars, end='')
                 # print(str(time.ctime(data[_modified])), end='')
-                print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_modified]))), end='')
+                print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_modified]))), end='')
 
-            if bColDTA:
-                print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_accessed]))), end='')
+            if display_col_dta:
+                print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_accessed]))), end='')
 
-            if bColDTS:
-                print(' ' * padChars + str(time.strftime(dateFormat, time.localtime(data[_status]))), end='')
+            if display_col_dts:
+                print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_status]))), end='')
 
-            if bColType:
-                print(' ' * padChars, end='')
+            if display_col_type:
+                print(' ' * pad_chars, end='')
                 if S_ISLNK(data[_mode]):
                     print('Symbolic Link   ', end='')
                 elif S_ISCHR(data[_mode]):
@@ -312,7 +313,7 @@ inputList = sys.argv[1:]
 terminalCols = os.get_terminal_size(0).columns  # size(x) = 0,1,2,3
 
 try:
-    argsList, namesList = getopt.getopt(inputList, GETOPT_STR)
+    args_list, names_list = getopt.getopt(inputList, GETOPT_STR)
 except getopt.error as e:
     print(str(e))
     exit(1)
@@ -321,151 +322,152 @@ except getopt.error as e:
 # print(namesList)
 # exit(0)
 
-for flag, option in argsList:
+for flag, option in args_list:
     # print("flag: '" + flag + "', option: '" + option + "'")
     if flag == "-b":
-        bBrief = True
+        use_brief = True
     elif flag == "-c":
-        bCountOnly = True
+        use_count_only = True
     elif flag == "-d":
         for subopt in option.split(","):
             if subopt == "dtm":
-                bColDTM = True
-                bDisplayDetail = True
+                display_col_dtm = True
+                use_detail = True
             elif subopt == "dta":
-                bColDTA = True
-                bDisplayDetail = True
+                display_col_dta = True
+                use_detail = True
             elif subopt == "dts":
-                bColDTS = True
-                bDisplayDetail = True
+                display_col_dts = True
+                use_detail = True
             elif subopt == "all":
-                bColDTM = True
-                bColDTA = True
-                bColDTS = True
-                bDisplayDetail = True
+                display_col_dtm = True
+                display_col_dta = True
+                display_col_dts = True
+                use_detail = True
             elif subopt == "mdy":
-                dateFormat = dateFormatMDY
+                date_format = date_format_MDY
             elif subopt == "dmy":
-                dateFormat = dateFormatDMY
+                date_format = date_format_DMY
             elif subopt == "ymd":
-                dateFormat = dateFormatYMD
+                date_format = date_format_YMD
             else:
                 print("Invalid value '" + subopt + "' for switch '-d'")
                 exit(1)
     elif flag == "-h":
         show_help()
     elif flag == "-i":
-        bColInode = True
-        bDisplayDetail = True
+        display_col_inode = True
+        use_detail = True
     elif flag == "-l":
-        bShowLink = True
+        show_link = True
     elif flag == "-n":
         for subopt in option.split(","):
             if subopt.lower() == "dot":
-                bShowDot = False
+                show_dot = False
             elif subopt.lower() == "hdr":
-                bShowHdr = False
+                show_hdr = False
             elif subopt.lower() == "name":
-                bShowName = False
+                show_name = False
             elif subopt.lower() == "pwd":
-                bShowPwd = False
+                show_pwd = False
             elif subopt.lower() == "qty":
-                bShowQty = False
+                show_qty = False
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-n'")
                 exit(1)
     elif flag == "-s":
         for subopt in option.split(","):
             if subopt.lower() == "none":
-                sortBy = ""
+                sort_by = ""
             elif subopt.lower() == "rev":
-                bSortReverse = True
+                use_reverse = True
             elif subopt.lower() == "size":
-                sortBy = _size
-                bColSize = True
-                bDisplayDetail = True
+                sort_by = _size
+                display_col_size = True
+                use_detail = True
             elif subopt.lower() == "dtm":
-                sortBy = _modified
-                bColDTM = True
-                bDisplayDetail = True
+                sort_by = _modified
+                display_col_dtm = True
+                use_detail = True
             elif subopt.lower() == "dta":
-                sortBy = _accessed
-                bColDTA = True
-                bDisplayDetail = True
+                sort_by = _accessed
+                display_col_dta = True
+                use_detail = True
             elif subopt.lower() == "dts":
-                sortBy = _status
-                bColDTS = True
-                bDisplayDetail = True
+                sort_by = _status
+                display_col_dts = True
+                use_detail = True
             elif subopt.lower() == "inode":
-                sortBy = _inode
-                bColInode = True
-                bDisplayDetail = True
+                sort_by = _inode
+                display_col_inode = True
+                use_detail = True
             elif subopt.lower() == "link":
-                sortBy = _link
-                bColLink = True
-                bDisplayDetail = True
+                sort_by = _link
+                display_col_link = True
+                use_detail = True
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-s'")
                 exit(1)
     elif flag == "-t":
         if option.lower().startswith("f"):
-            bFiles = True
-            bDirs = False
+            show_files = True
+            show_dirs = False
         elif option.lower().startswith("d"):
-            bFiles = False
-            bDirs = True
+            show_files = False
+            show_dirs = True
         else:
             print("Invalid value '" + option + "' for switch '-t'")
             exit(1)
     elif flag == "-u":
-        bDisplayDetail = True
-        bColSize = True
+        use_detail = True
+        display_col_size = True
         for subopt in option.split(","):
             if subopt.lower() == "b":
-                unitDivide = 1
-                unitText = "Size (Bytes)"
+                unit_divide = 1
+                unit_text = "Size (Bytes)"
             elif subopt.lower() == "k":
-                unitDivide = 1000 ** 1
-                unitText = "Size (KBytes)"
+                unit_divide = 1000 ** 1
+                unit_text = "Size (KBytes)"
             elif subopt.lower() == "m":
-                unitDivide = 1000 ** 2
-                unitText = "Size (MBytes)"
+                unit_divide = 1000 ** 2
+                unit_text = "Size (MBytes)"
             elif subopt.lower() == "g":
-                unitDivide = 1000 ** 3
-                unitText = "Size (GBytes)"
+                unit_divide = 1000 ** 3
+                unit_text = "Size (GBytes)"
             else:
                 print("Unkown sub option '" + subopt + "' for switch '-u'")
                 exit(1)
     elif flag == "-B":
-        bColBlocks = True
-        bDisplayDetail = True
+        display_col_blocks = True
+        use_detail = True
     elif flag == "-C":
-        bSingleCol = True
+        use_single_col = True
     elif flag == "-L":
-        bColLink = True
-        bDisplayDetail = True
+        display_col_link = True
+        use_detail = True
     elif flag == "-S":
-        unitDivide = 1
-        unitText = "Size (Bytes)"
-        bColSize = True
-        bDisplayDetail = True
+        unit_divide = 1
+        unit_text = "Size (Bytes)"
+        display_col_size = True
+        use_detail = True
     elif flag == "-T":
-        bColType = True
-        bDisplayDetail = True
+        need_mode = True
+        display_col_type = True
+        use_detail = True
 
-if len(namesList) == 0:
-    namesList.append(".")
+if len(names_list) == 0:
+    names_list.append(".")
 
-for name in namesList:
-    entriesList = []
-    filesList = []
-    dirsList = []
+for name in names_list:
+    entries_list = []
+    files_list = []
+    dirs_list = []
     sortedList = []
-    maxNameLen = 1
+    max_name_len = 1
 
-    if not bBrief:
+    if not use_brief:
         print("")
-        if len(namesList) > 1:
+        if len(names_list) > 1:
             print("-" * terminalCols)
 
     if name == ".":
@@ -477,7 +479,7 @@ for name in namesList:
 
     if os.path.isdir(name):
         try:
-            entriesList = os.listdir(name)
+            entries_list = os.listdir(name)
         except FileNotFoundError as e:
             print("File Not Found: '" + name + "'")
             continue
@@ -485,62 +487,62 @@ for name in namesList:
             print("Permission Denied: '" + name + "'")
             continue
     else:
-        entriesList.append(name)
+        entries_list.append(name)
 
-    for entry in entriesList:
-        if entry.startswith(".") and not bShowDot:
+    for entry in entries_list:
+        if entry.startswith(".") and not show_dot:
             continue
 
         pathname = os.path.join(name, entry)
 
         if os.path.isdir(pathname):
-            dirsList.append(get_entry(entry, pathname))
+            dirs_list.append(get_entry(entry, pathname))
         else:
-            filesList.append(get_entry(entry, pathname))
+            files_list.append(get_entry(entry, pathname))
 
-        if (len(entry) + padChars) > maxNameLen:
-            maxNameLen = len(entry) + padChars
+        if (len(entry) + pad_chars) > max_name_len:
+            max_name_len = len(entry) + pad_chars
 
-    if bShowPwd:
+    if show_pwd:
         print(name, end="")
-    if bShowQty:
-        if bShowPwd:
+    if show_qty:
+        if show_pwd:
             print("   ", end="")
-        print("Entries: " + str(len(entriesList)), end="")
-    if bShowPwd or bShowQty:
+        print("Entries: " + str(len(entries_list)), end="")
+    if show_pwd or show_qty:
         print("")
 
-    displayCols = terminalCols // maxNameLen
+    display_columns = terminalCols // max_name_len
 
-    if bFiles:
-        if not bBrief:
+    if show_files:
+        if not use_brief:
             print("")
 
-        if bShowQty:
-            print("Files: " + str(len(filesList)))
+        if show_qty:
+            print("Files: " + str(len(files_list)))
 
-        if len(filesList) > 0 and not bCountOnly:
-            sortedList = sort_entries(filesList)
+        if len(files_list) > 0 and not use_count_only:
+            sortedList = sort_entries(files_list)
 
-            if bDisplayDetail:
+            if use_detail:
                 display_details(sortedList)
             else:
                 display_default(sortedList)
 
-    if bDirs:
-        if not bBrief:
+    if show_dirs:
+        if not use_brief:
             print("")
 
-        if bShowQty:
-            print("Directories: " + str(len(dirsList)))
+        if show_qty:
+            print("Directories: " + str(len(dirs_list)))
 
-        if len(dirsList) > 0 and not bCountOnly:
-            sortedList = sort_entries(dirsList)
+        if len(dirs_list) > 0 and not use_count_only:
+            sortedList = sort_entries(dirs_list)
 
-            if bDisplayDetail:
+            if use_detail:
                 display_details(sortedList)
             else:
                 display_default(sortedList)
 
-if not bBrief:
+if not use_brief:
     print("")

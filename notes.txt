@@ -1,8 +1,36 @@
 bash shell functions that have been useful.  Add these to .bash_profile
 
+For MacOS ...
+
 function l() { clear ; pd -d ymd $* | more -E ; }
 function ll() { clear ; pd -d ymd,dtm -S -p $* | more -E ; }
 function up() { cd .. ; clear ; pd -d ymd $* | more -E ; }
+
+For linux ...
+
+function l() { clear ; pd -d ymd $* | more ; }
+function ll() { clear ; pd -d ymd,dtm -S -p $* | more ; }
+function up() { cd .. ; clear ; pd -d ymd $* | more ; }
+
+--------
+stat mask ...
+--------
+
+>>> stat.S_IMODE(status.st_mode) & stat.S_IWUSR != stat.S_IWUSR
+False
+>>> stat.S_IMODE(status.st_mode) & stat.S_IWUSR == stat.S_IWUSR
+True
+>>> stat.S_IMODE(status.st_mode) & stat.S_IRUSR == stat.S_IRUSR
+True
+>>> stat.S_IMODE(status.st_mode) & stat.S_IXUSR == stat.S_IXUSR
+False
+>>> stat.S_IMODE(status.st_mode) & stat.S_IXGRP == stat.S_IXGRP
+False
+>>> stat.S_IMODE(status.st_mode) & stat.S_IWGRP == stat.S_IWGRP
+False
+>>> stat.S_IMODE(status.st_mode) & stat.S_IRGRP == stat.S_IRGRP
+True
+
 
 errors:
 --------
