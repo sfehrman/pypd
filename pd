@@ -5,6 +5,9 @@ import getopt
 import sys
 import operator
 import time
+import stat
+import pwd
+import grp
 
 from stat import *
 
@@ -14,6 +17,7 @@ _accessed = "accessed"
 _blocks = "blocks"
 _error = "error"
 _inode = "inode"
+_group = "group"
 _link = "link"
 _message = "message"
 _mode = "mode"
@@ -23,6 +27,7 @@ _size = "size"
 _stat = "stat"
 _status = "status"
 _symbolic = "symbolic"
+_user = "user"
 pad_chars = 3
 max_name_len = 1
 display_columns = 0
@@ -41,7 +46,7 @@ use_detail = False
 use_reverse = False
 show_dot = True  # show hidden files (name begins with a dot)
 show_hdr = True  # show column headers with alternate output format
-show_name = True
+show_name = True  # show the user and group names instead of uid and gid
 show_pwd = True  # show the directory path
 show_qty = True  # show the quantities for Entries, Files, Directories
 show_link = False  # show symbolic link info, not what link points to
@@ -53,6 +58,7 @@ display_col_inode = False  # show Inode number
 display_col_link = False  # show link count
 display_col_blocks = False  # show blocks allocated
 display_col_type = False  # show the file type
+display_col_perm = False  # show the file permissions (rwx...)
 need_mode = False
 date_format_YMD = '%Y-%m-%d %H:%M:%S'
 date_format_MDY = '%m-%d-%Y %H:%M:%S'
@@ -147,6 +153,9 @@ def get_entry(entry_name, path_name):
         if is_link:
             entry_data.update({_symbolic: link_info})
 
+        if need_mode:
+            entry_data.update({_mode: entry_stat.st_mode})
+
         if display_col_size:
             entry_data.update({_size: entry_stat.st_size})
         if display_col_blocks:
@@ -161,8 +170,8 @@ def get_entry(entry_name, path_name):
             entry_data.update({_inode: entry_stat.st_ino})
         if display_col_link:
             entry_data.update({_link: entry_stat.st_nlink})
-        if need_mode:
-            entry_data.update({_mode: entry_stat.st_mode})
+        if display_col_perm:
+            entry_data.update({_user: entry_stat.st_uid, _group: entry_stat.st_gid})
 
     # print("entry_data: " + str(entry_data))  # debug
 
@@ -209,6 +218,8 @@ def display_default(data_list):
 
 
 def display_details(data_list):
+    pwd_data = {}
+    grp_data = {}
 
     if not use_brief:
         print("")
@@ -226,6 +237,9 @@ def display_details(data_list):
 
         if display_col_link:
             print(' ' * 3 + 'Links', end='')
+
+        if display_col_perm:
+            print(' ' * pad_chars + 'User  Group Other       User.Group' + ' ' * 3, end='')
 
         if display_col_dtm:
             print(' ' * pad_chars + 'Modified' + ' ' * 11, end='')
@@ -266,9 +280,86 @@ def display_details(data_list):
             if display_col_link:
                 print(' ' * (8 - len(str(data[_link]))) + str(data[_link]), end='')
 
+            if display_col_perm:
+                # ---- User
+
+                print(' ' * pad_chars, end='')
+
+                if stat.S_IMODE(data[_mode]) & S_IRUSR == S_IRUSR:
+                    print('r', end='')
+                else:
+                    print('-', end='')
+
+                if stat.S_IMODE(data[_mode]) & S_IWUSR == S_IWUSR:
+                    print('w', end='')
+                else:
+                    print('-', end='')
+
+                if stat.S_IMODE(data[_mode]) & S_IXUSR == S_IXUSR:
+                    if stat.S_IMODE(data[_mode]) & S_ISUID == S_ISUID:
+                        print('s', end='')
+                    else:
+                        print('x', end='')
+                else:
+                    if stat.S_IMODE(data[_mode]) & S_ISUID == S_ISUID:
+                        print('S', end='')
+                    else:
+                        print('-', end='')
+
+                # ---- Group
+
+                print('   ', end='')
+
+                if stat.S_IMODE(data[_mode]) & S_IRGRP == S_IRGRP:
+                    print('r', end='')
+                else:
+                    print('-', end='')
+
+                if stat.S_IMODE(data[_mode]) & S_IWGRP == S_IWGRP:
+                    print('w', end='')
+                else:
+                    print('-', end='')
+
+                if stat.S_IMODE(data[_mode]) & S_IXGRP == S_IXGRP:
+                    if stat.S_IMODE(data[_mode]) & S_ISGID == S_ISGID:
+                        print('s', end='')
+                    else:
+                        print('x', end='')
+                else:
+                    if stat.S_IMODE(data[_mode]) & S_ISGID == S_ISGID:
+                        print('S', end='')
+                    else:
+                        print('-', end='')
+
+                # ---- Other
+                
+                print('   ', end='')
+
+                if stat.S_IMODE(data[_mode]) & S_IROTH == S_IROTH:
+                    print('r', end='')
+                else:
+                    print('-', end='')
+                if stat.S_IMODE(data[_mode]) & S_IWOTH == S_IWOTH:
+                    print('w', end='')
+                else:
+                    print('-', end='')
+                if stat.S_IMODE(data[_mode]) & S_IXOTH == S_IXOTH:
+                    print('x', end='')
+                else:
+                    print('-', end='')
+
+                print('     ', end='')
+
+                if show_name:
+                    pwd_data = pwd.getpwuid(data[_user])
+                    grp_data = grp.getgrgid(data[_group])
+                    print(' ' * (8 - len(pwd_data[0])) + pwd_data[0] + '.', end='')
+                    print(str(grp_data[0]) + ' ' * (8 - len(str(grp_data[0]))), end='')
+                else:
+                    print(' ' * (8 - len(str(data[_user]))) + str(data[_user]) + '.', end='')
+                    print(str(data[_group]) + ' ' * (8 - len(str(data[_group]))), end='')
+
             if display_col_dtm:
-                # print(' ' * padChars, end='')
-                # print(str(time.ctime(data[_modified])), end='')
                 print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_modified]))), end='')
 
             if display_col_dta:
@@ -299,7 +390,7 @@ def display_details(data_list):
             if _symbolic in data:
                 print(' -> ' + data[_symbolic], end='')
 
-        print("")
+        print('')
 
     return
 
@@ -375,6 +466,10 @@ for flag, option in args_list:
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-n'")
                 exit(1)
+    elif flag == "-p":
+        need_mode = True
+        display_col_perm = True
+        use_detail = True
     elif flag == "-s":
         for subopt in option.split(","):
             if subopt.lower() == "none":
