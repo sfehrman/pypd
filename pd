@@ -50,6 +50,7 @@ show_name = True  # show the user and group names instead of uid and gid
 show_pwd = True  # show the directory path
 show_qty = True  # show the quantities for Entries, Files, Directories
 show_link = False  # show symbolic link info, not what link points to
+show_mode = False  # Show the permission mode [4777]
 display_col_size = False
 display_col_dtm = False  # show Date Time modified
 display_col_dta = False  # show Date Time accessed
@@ -84,11 +85,11 @@ def show_help():
     -m        show permissions mode [4777]
     -n <args> no output options: [dot,hdr,name,pwd,qty]
     -p        permissions: rwx rwx rwx   name.group
-    -s <args> sorting options: [none|name|dtm|dta|dts|user|group|inode|link|size|type,rev] (default = '-s name') 
+    -s <args> sorting options: [none|name|dtm|dta|dts|inode|link|size,rev] (default = '-s name') 
     -t <args> select type: [file|f,dir|d] (default show both) 
     -u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
     -v        program version
-    -A        show all entries (jncluding '.' and '..')
+    -A        show all entries (including '.' and '..')
     -B        show file blocks allocated
     -C        output using single column
     -D        show sub-directory information not it's entries (treat it like a file)
@@ -220,6 +221,8 @@ def display_default(data_list):
 def display_details(data_list):
     pwd_data = {}
     grp_data = {}
+    user_name = ""
+    group_name = ""
 
     if not use_brief:
         print("")
@@ -239,7 +242,10 @@ def display_details(data_list):
             print(' ' * 3 + 'Links', end='')
 
         if display_col_perm:
-            print(' ' * pad_chars + 'User  Group Other       User.Group' + ' ' * 3, end='')
+            if show_mode:
+                print(' ' * pad_chars + 'User  Group Other   [Mode]        User.Group' + ' ' * 3, end='')
+            else:
+                print(' ' * pad_chars + 'User  Group Other           User.Group' + ' ' * 3, end='')
 
         if display_col_dtm:
             print(' ' * pad_chars + 'Modified' + ' ' * 11, end='')
@@ -267,7 +273,6 @@ def display_details(data_list):
             print(' ' * pad_chars + data[_message])
         else:
             if display_col_size:
-                # print(' ' * (13 - len(str(data[_size]))), end='')
                 size = data[_size] // unit_divide
                 print(' ' * (16 - len(str(size))) + str(size), end='')
 
@@ -332,7 +337,7 @@ def display_details(data_list):
                         print('-', end='')
 
                 # ---- Other
-                
+
                 print('   ', end='')
 
                 if stat.S_IMODE(data[_mode]) & S_IROTH == S_IROTH:
@@ -350,14 +355,27 @@ def display_details(data_list):
 
                 print('     ', end='')
 
+                if show_mode:
+                    print('[' + oct(data[_mode])[-4:] + ']', end='')
+
                 if show_name:
                     pwd_data = pwd.getpwuid(data[_user])
                     grp_data = grp.getgrgid(data[_group])
-                    print(' ' * (8 - len(pwd_data[0])) + pwd_data[0] + '.', end='')
-                    print(str(grp_data[0]) + ' ' * (8 - len(str(grp_data[0]))), end='')
+
+                    user_name = pwd_data[0]
+                    group_name = grp_data[0]
+
+                    if len(user_name) > 12:
+                        user_name = user_name[:12]
+
+                    if len(group_name) > 12:
+                        group_name = group_name[:12]
+
+                    print(' ' * (12 - len(user_name)) + user_name + '.', end='')
+                    print(str(group_name) + ' ' * (12 - len(str(group_name))), end='')
                 else:
-                    print(' ' * (8 - len(str(data[_user]))) + str(data[_user]) + '.', end='')
-                    print(str(data[_group]) + ' ' * (8 - len(str(data[_group]))), end='')
+                    print(' ' * (12 - len(str(data[_user]))) + str(data[_user]) + '.', end='')
+                    print(str(data[_group]) + ' ' * (12 - len(str(data[_group]))), end='')
 
             if display_col_dtm:
                 print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_modified]))), end='')
@@ -451,6 +469,11 @@ for flag, option in args_list:
         use_detail = True
     elif flag == "-l":
         show_link = True
+    elif flag == "-m":
+        need_mode = True
+        show_mode = True
+        display_col_perm = True
+        use_detail = True
     elif flag == "-n":
         for subopt in option.split(","):
             if subopt.lower() == "dot":
@@ -532,6 +555,9 @@ for flag, option in args_list:
             else:
                 print("Unkown sub option '" + subopt + "' for switch '-u'")
                 exit(1)
+    elif flag == "-v":
+        print('Print Directory (pd) v' + VERSION + ' Python Edition')
+        exit(0)
     elif flag == "-B":
         display_col_blocks = True
         use_detail = True
