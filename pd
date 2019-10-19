@@ -243,9 +243,9 @@ def display_details(data_list):
 
         if display_col_perm:
             if show_mode:
-                print(' ' * pad_chars + 'User  Group Other   [Mode]        User.Group' + ' ' * 3, end='')
+                print(' ' * pad_chars + 'User  Group Other   [Mode]        User.Group' + ' ' * 7, end='')
             else:
-                print(' ' * pad_chars + 'User  Group Other           User.Group' + ' ' * 3, end='')
+                print(' ' * pad_chars + 'User  Group Other           User.Group' + ' ' * 7, end='')
 
         if display_col_dtm:
             print(' ' * pad_chars + 'Modified' + ' ' * 11, end='')
