@@ -635,7 +635,7 @@ for name in names_list:
 
     display_columns = terminalCols // max_name_len
 
-    if show_files:
+    if show_files and len(files_list) > 0:
         if not use_brief:
             print("")
 
@@ -650,7 +650,7 @@ for name in names_list:
             else:
                 display_default(sortedList)
 
-    if show_dirs:
+    if show_dirs and len(dirs_list) > 0:
         if not use_brief:
             print("")
 

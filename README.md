@@ -10,14 +10,12 @@ the unix/linux `ls` command.
 The original `pd` command was written by me (a long time ago) using "c", 
 you can access that that project [HERE](https://github.com/sfehrman/pd)
 
-## Install
+# Install
 1. You **must** have Python 3 installed
 2. Clone or Download the project
 3. Copy the ``pd`` script to a folder that is in your **PATH** (``/usr/local/bin``)
 
-
-## Help
-
+# Help
 
 ```
 pd -h
@@ -27,7 +25,7 @@ pd -h
     -d <args> date/time options: [all|dtm|dta|dts] [mdy|dmy|ymd]
     -h        help
     -i        show inode numbers
-    -l        show symbolic link's status
+    -l        show symbolic link status
     -m        show permissions mode [4777]
     -n <args> no output options: [dot,hdr,name,pwd,qty]
     -p        permissions: rwx rwx rwx   name.group
@@ -38,17 +36,18 @@ pd -h
     -A        show all entries (including '.' and '..')
     -B        show file blocks allocated
     -C        output using single column
-    -D        show sub-directory information not it's entries (treat it like a file)
+    -D        show sub-directory information not the entries (treat it like a file)
     -L        show hard link count
     -R        recursive list into sub-directories
     -S        show file size (default = bytes)
     -T        show file types
 ```
 
-## Examples
-### Default output:
+# Examples
 
-```
+## Default output:
+
+```bash
 pd
 
 /Users/sfehrman/Documents/github/pypd   Entries: 8
@@ -63,9 +62,9 @@ Directories: 2
 
 ```
 
-### Size and Permissions (like ``ls -la``):
+## Size and Permissions (like ``ls -la``):
 
-```
+```bash
 pd -S -p
 
 /Users/sfehrman/Documents/github/pypd   Entries: 8
@@ -89,9 +88,9 @@ Name            Size (Bytes)   User  Group Other           User.Group
 .idea                    306   rwx   r-x   r-x         sfehrman.staff       
 ```
 
-### All date information:
+## All date information:
 
-```
+```bash
 pd -dall
 
 /Users/sfehrman/Documents/github/pypd   Entries: 8
@@ -114,8 +113,10 @@ Name           Modified              Accessed              Status Changed
 .git           2019-10-18 21:05:25   2019-10-18 21:04:01   2019-10-18 21:05:25
 .idea          2019-10-18 20:51:58   2019-10-18 21:04:01   2019-10-18 20:51:58
 ```
-### Show only type "file":
-```
+
+## Show only type "file":
+
+```bash
 pd -tf /
 
 /   Entries: 28
@@ -126,8 +127,10 @@ Files: 4
 .file                                     installer.failurerequests
 
 ```
-### Show only type "directory":
-```
+
+## Show only type "directory":
+
+```bash
 pd -td /
 
 /   Entries: 28
@@ -147,8 +150,10 @@ net                                       private
 sbin                                      tmp
 usr                                       var
 ```
-### Show Size, Blocks Allocated, Inodes:
-```
+
+## Show Size, Blocks Allocated, Inodes:
+
+```bash
 pd -S -i -B
 
 /Users/Shared/VirtualBox/HardDisks   Entries: 1
@@ -161,8 +166,10 @@ Windows7Ultimate64bit.vdi        35769196544    69861712     1175605
 
 Directories: 0
 ```
-### Set size units (MBytes):
-```
+
+## Set size units (MBytes):
+
+```bash
 pd -S -i -B -um
 
 /Users/Shared/VirtualBox/HardDisks   Entries: 1
@@ -174,5 +181,4 @@ Name                           Size (MBytes)      Blocks       Inode
 Windows7Ultimate64bit.vdi              35769    69861712     1175605
 
 Directories: 0
-
 ```
