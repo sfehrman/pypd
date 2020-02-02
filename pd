@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
 _accessed = "accessed"
 _blocks = "blocks"
@@ -89,12 +89,12 @@ def show_help():
     text = """
     -b        brief, unformatted output
     -c        count entries only
-    -d <args> date/time options: [all|dtm|dta|dts] [mdy|dmy|ymd]
+    -d <args> date/time options: [full|f|dtm|m|dta|a|dts|s] [mdy|dmy|ymd]
     -h        help
     -i        show inode numbers
     -l        show symbolic link's status
     -m        show permissions mode [4777]
-    -n <args> no output options: [dot,hdr,name,pwd,qty]
+    -n <args> no output options: [dot|d|hdr|h|name|n|pwd|p|qty|q]
     -p        permissions: rwx rwx rwx   name.group
     -s <args> sorting options: [none|name|dtm|dta|dts|inode|link|size,rev] (default = '-s name') 
     -t <args> select type: [file|f,dir|d] (default show both) 
@@ -235,7 +235,7 @@ def display_details(data_list):
     user_name = ""
     group_name = ""
 
-    if not use_brief:
+    if not use_brief and show_hdr:
         print("")
 
         print("Name" + ' ' * (max_name_len - 4), end='')
@@ -450,16 +450,16 @@ for flag, option in args_list:
         use_count_only = True
     elif flag == "-d":
         for subopt in option.split(","):
-            if subopt == "dtm":
+            if subopt == "dtm" or subopt == "m":
                 display_col_dtm = True
                 use_detail = True
-            elif subopt == "dta":
+            elif subopt == "dta" or subopt == "a":
                 display_col_dta = True
                 use_detail = True
-            elif subopt == "dts":
+            elif subopt == "dts" or subopt == "s":
                 display_col_dts = True
                 use_detail = True
-            elif subopt == "all":
+            elif subopt == "full" or subopt == "f":
                 display_col_dtm = True
                 display_col_dta = True
                 display_col_dts = True
@@ -487,15 +487,15 @@ for flag, option in args_list:
         use_detail = True
     elif flag == "-n":
         for subopt in option.split(","):
-            if subopt.lower() == "dot":
+            if subopt.lower() == "dot" or subopt.lower() == "d":
                 show_dot = False
-            elif subopt.lower() == "hdr":
+            elif subopt.lower() == "hdr" or subopt.lower() == "h":
                 show_hdr = False
-            elif subopt.lower() == "name":
+            elif subopt.lower() == "name" or subopt.lower() == "n":
                 show_name = False
-            elif subopt.lower() == "pwd":
+            elif subopt.lower() == "pwd" or subopt.lower() == "p":
                 show_pwd = False
-            elif subopt.lower() == "qty":
+            elif subopt.lower() == "qty" or subopt.lower() == "q":
                 show_qty = False
             else:
                 print("Unknown sub option '" + subopt + "' for switch '-n'")
