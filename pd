@@ -9,9 +9,20 @@ import stat
 import pwd
 import grp
 
-from stat import *
+'''
+License: https://opensource.org/licenses/MIT
+Author: Scott Fehrman sfehrman@me.com
 
-VERSION = "1.0.0"
+THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+SOFTWARE.
+'''
+
+VERSION = "1.0.1"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
 _accessed = "accessed"
 _blocks = "blocks"
@@ -290,23 +301,23 @@ def display_details(data_list):
 
                 print(' ' * pad_chars, end='')
 
-                if stat.S_IMODE(data[_mode]) & S_IRUSR == S_IRUSR:
+                if stat.S_IMODE(data[_mode]) & stat.S_IRUSR == stat.S_IRUSR:
                     print('r', end='')
                 else:
                     print('-', end='')
 
-                if stat.S_IMODE(data[_mode]) & S_IWUSR == S_IWUSR:
+                if stat.S_IMODE(data[_mode]) & stat.S_IWUSR == stat.S_IWUSR:
                     print('w', end='')
                 else:
                     print('-', end='')
 
-                if stat.S_IMODE(data[_mode]) & S_IXUSR == S_IXUSR:
-                    if stat.S_IMODE(data[_mode]) & S_ISUID == S_ISUID:
+                if stat.S_IMODE(data[_mode]) & stat.S_IXUSR == stat.S_IXUSR:
+                    if stat.S_IMODE(data[_mode]) & stat.S_ISUID == stat.S_ISUID:
                         print('s', end='')
                     else:
                         print('x', end='')
                 else:
-                    if stat.S_IMODE(data[_mode]) & S_ISUID == S_ISUID:
+                    if stat.S_IMODE(data[_mode]) & stat.S_ISUID == stat.S_ISUID:
                         print('S', end='')
                     else:
                         print('-', end='')
@@ -315,23 +326,23 @@ def display_details(data_list):
 
                 print('   ', end='')
 
-                if stat.S_IMODE(data[_mode]) & S_IRGRP == S_IRGRP:
+                if stat.S_IMODE(data[_mode]) & stat.S_IRGRP == stat.S_IRGRP:
                     print('r', end='')
                 else:
                     print('-', end='')
 
-                if stat.S_IMODE(data[_mode]) & S_IWGRP == S_IWGRP:
+                if stat.S_IMODE(data[_mode]) & stat.S_IWGRP == stat.S_IWGRP:
                     print('w', end='')
                 else:
                     print('-', end='')
 
-                if stat.S_IMODE(data[_mode]) & S_IXGRP == S_IXGRP:
-                    if stat.S_IMODE(data[_mode]) & S_ISGID == S_ISGID:
+                if stat.S_IMODE(data[_mode]) & stat.S_IXGRP == stat.S_IXGRP:
+                    if stat.S_IMODE(data[_mode]) & stat.S_ISGID == stat.S_ISGID:
                         print('s', end='')
                     else:
                         print('x', end='')
                 else:
-                    if stat.S_IMODE(data[_mode]) & S_ISGID == S_ISGID:
+                    if stat.S_IMODE(data[_mode]) & stat.S_ISGID == stat.S_ISGID:
                         print('S', end='')
                     else:
                         print('-', end='')
@@ -340,15 +351,15 @@ def display_details(data_list):
 
                 print('   ', end='')
 
-                if stat.S_IMODE(data[_mode]) & S_IROTH == S_IROTH:
+                if stat.S_IMODE(data[_mode]) & stat.S_IROTH == stat.S_IROTH:
                     print('r', end='')
                 else:
                     print('-', end='')
-                if stat.S_IMODE(data[_mode]) & S_IWOTH == S_IWOTH:
+                if stat.S_IMODE(data[_mode]) & stat.S_IWOTH == stat.S_IWOTH:
                     print('w', end='')
                 else:
                     print('-', end='')
-                if stat.S_IMODE(data[_mode]) & S_IXOTH == S_IXOTH:
+                if stat.S_IMODE(data[_mode]) & stat.S_IXOTH == stat.S_IXOTH:
                     print('x', end='')
                 else:
                     print('-', end='')
@@ -388,21 +399,21 @@ def display_details(data_list):
 
             if display_col_type:
                 print(' ' * pad_chars, end='')
-                if S_ISLNK(data[_mode]):
+                if stat.S_ISLNK(data[_mode]):
                     print('Symbolic Link   ', end='')
-                elif S_ISCHR(data[_mode]):
+                elif stat.S_ISCHR(data[_mode]):
                     print('Character Device', end='')
-                elif S_ISBLK(data[_mode]):
+                elif stat.S_ISBLK(data[_mode]):
                     print('Block Device    ', end='')
-                elif S_ISFIFO(data[_mode]):
+                elif stat.S_ISFIFO(data[_mode]):
                     print('FIFO            ', end='')
-                elif S_ISREG(data[_mode]):
+                elif stat.S_ISREG(data[_mode]):
                     print('Regular File    ', end='')
-                elif S_ISSOCK(data[_mode]):
+                elif stat.S_ISSOCK(data[_mode]):
                     print('Socket          ', end='')
-                elif S_ISDOOR(data[_mode]):
+                elif stat.S_ISDOOR(data[_mode]):
                     print('Door            ', end='')
-                if S_ISDIR(data[_mode]):
+                if stat.S_ISDIR(data[_mode]):
                     print('Directory       ', end='')
 
             if _symbolic in data:
