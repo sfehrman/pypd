@@ -36,7 +36,7 @@ _modified = "modified"
 _name = "name"
 _size = "size"
 _stat = "stat"
-_status = "status"
+_changed = "changed"
 _symbolic = "symbolic"
 _user = "user"
 pad_chars = 3
@@ -65,7 +65,7 @@ show_mode = False  # Show the permission mode [4777]
 display_col_size = False
 display_col_dtm = False  # show Date Time modified
 display_col_dta = False  # show Date Time accessed
-display_col_dts = False  # show Date Time status changed (chmod)
+display_col_dtc = False  # show Date Time status changed (chmod)
 display_col_inode = False  # show Inode number
 display_col_link = False  # show link count
 display_col_blocks = False  # show blocks allocated
@@ -89,7 +89,7 @@ def show_help():
     text = """
     -b        brief, unformatted output
     -c        count entries only
-    -d <args> date/time options: [full|f|dtm|m|dta|a|dts|s] [mdy|dmy|ymd]
+    -d <args> date/time options: [full|f|dtm|m|dta|a|dtc|s] [mdy|dmy|ymd]
     -h        help
     -i        show inode numbers
     -l        show symbolic link's status
@@ -97,7 +97,7 @@ def show_help():
     -n <args> no output options: [dot|d|hdr|h|name|n|pwd|p|qty|q]
     -p        permissions: rwx rwx rwx   name.group
     -s <args> sorting options: (default = '-s name')
-              [none|0|name|n|dtm|m|dta|a|dts|t|inode|i|link|l|size|s,rev|r] 
+              [none|0|name|n|dtm|m|dta|a|dtc|c|inode|i|link|l|size|s,rev|r] 
     -t <args> select type: [file|f|dir|d] (default show both) 
     -u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
     -v        program version
@@ -112,6 +112,28 @@ def show_help():
     """
     print(text)
     exit(0)
+
+
+class Entry:
+    def __init__(self, name, path):
+        self.error = False    # an error occured
+        self.message = None   # error message
+        self.path = path      # full filesystem pathname to entry
+        self.name = name      # entry name, in the path location
+        self.symbolic = None  # symbolic link information
+        self.mode = 0         # stat mode data
+        self.size = 0         # stat file size
+        self.blocks = 0       # stat filesystem blocks
+        self.inode = 0        # stat inode
+        self.nlinks = 0       # stat number of (hard) links
+        self.uid = 0          # stat user id
+        self.gid = 0          # stat group id
+        self.mtime = 0.0      # stat date / time modified
+        self.atime = 0.0      # stat date / time accessed
+        self.ctime = 0.0      # stat date / time status changed
+
+    def pathname(self):
+        return self.path + '/' + self.name
 
 
 def get_entry(entry_name, path_name):
@@ -177,14 +199,15 @@ def get_entry(entry_name, path_name):
             entry_data.update({_modified: entry_stat.st_mtime})
         if display_col_dta:
             entry_data.update({_accessed: entry_stat.st_atime})
-        if display_col_dts:
-            entry_data.update({_status: entry_stat.st_ctime})
+        if display_col_dtc:
+            entry_data.update({_changed: entry_stat.st_ctime})
         if display_col_inode:
             entry_data.update({_inode: entry_stat.st_ino})
         if display_col_link:
             entry_data.update({_link: entry_stat.st_nlink})
         if display_col_perm:
-            entry_data.update({_user: entry_stat.st_uid, _group: entry_stat.st_gid})
+            entry_data.update(
+                {_user: entry_stat.st_uid, _group: entry_stat.st_gid})
 
     # print("entry_data: " + str(entry_data))  # debug
 
@@ -255,9 +278,13 @@ def display_details(data_list):
 
         if display_col_perm:
             if show_mode:
-                print(' ' * pad_chars + 'User  Group Other   [Mode]        User.Group' + ' ' * 7, end='')
+                print(' ' * pad_chars +
+                      'User  Group Other   [Mode]        User.Group' + ' ' * 7,
+                      end='')
             else:
-                print(' ' * pad_chars + 'User  Group Other           User.Group' + ' ' * 7, end='')
+                print(' ' * pad_chars +
+                      'User  Group Other           User.Group' + ' ' * 7,
+                      end='')
 
         if display_col_dtm:
             print(' ' * pad_chars + 'Modified' + ' ' * 11, end='')
@@ -265,7 +292,7 @@ def display_details(data_list):
         if display_col_dta:
             print(' ' * pad_chars + 'Accessed' + ' ' * 11, end='')
 
-        if display_col_dts:
+        if display_col_dtc:
             print(' ' * pad_chars + 'Status Changed' + ' ' * 5, end='')
 
         if display_col_type:
@@ -289,13 +316,16 @@ def display_details(data_list):
                 print(' ' * (16 - len(str(size))) + str(size), end='')
 
             if display_col_blocks:
-                print(' ' * (12 - len(str(data[_blocks]))) + str(data[_blocks]), end='')
+                print(
+                    ' ' * (12 - len(str(data[_blocks]))) + str(data[_blocks]), end='')
 
             if display_col_inode:
-                print(' ' * (12 - len(str(data[_inode]))) + str(data[_inode]), end='')
+                print(
+                    ' ' * (12 - len(str(data[_inode]))) + str(data[_inode]), end='')
 
             if display_col_link:
-                print(' ' * (8 - len(str(data[_link]))) + str(data[_link]), end='')
+                print(
+                    ' ' * (8 - len(str(data[_link]))) + str(data[_link]), end='')
 
             if display_col_perm:
                 # ---- User
@@ -384,19 +414,25 @@ def display_details(data_list):
                         group_name = group_name[:12]
 
                     print(' ' * (12 - len(user_name)) + user_name + '.', end='')
-                    print(str(group_name) + ' ' * (12 - len(str(group_name))), end='')
+                    print(str(group_name) + ' ' *
+                          (12 - len(str(group_name))), end='')
                 else:
-                    print(' ' * (12 - len(str(data[_user]))) + str(data[_user]) + '.', end='')
-                    print(str(data[_group]) + ' ' * (12 - len(str(data[_group]))), end='')
+                    print(
+                        ' ' * (12 - len(str(data[_user]))) + str(data[_user]) + '.', end='')
+                    print(str(data[_group]) + ' ' *
+                          (12 - len(str(data[_group]))), end='')
 
             if display_col_dtm:
-                print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_modified]))), end='')
+                print(' ' * pad_chars + str(time.strftime(date_format,
+                                                          time.localtime(data[_modified]))), end='')
 
             if display_col_dta:
-                print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_accessed]))), end='')
+                print(' ' * pad_chars + str(time.strftime(date_format,
+                                                          time.localtime(data[_accessed]))), end='')
 
-            if display_col_dts:
-                print(' ' * pad_chars + str(time.strftime(date_format, time.localtime(data[_status]))), end='')
+            if display_col_dtc:
+                print(' ' * pad_chars + str(time.strftime(date_format,
+                                                          time.localtime(data[_changed]))), end='')
 
             if display_col_type:
                 print(' ' * pad_chars, end='')
@@ -457,13 +493,13 @@ for flag, option in args_list:
             elif subopt == "dta" or subopt == "a":
                 display_col_dta = True
                 use_detail = True
-            elif subopt == "dts" or subopt == "s":
-                display_col_dts = True
+            elif subopt == "dtc" or subopt == "c":
+                display_col_dtc = True
                 use_detail = True
             elif subopt == "full" or subopt == "f":
                 display_col_dtm = True
                 display_col_dta = True
-                display_col_dts = True
+                display_col_dtc = True
                 use_detail = True
             elif subopt == "mdy":
                 date_format = date_format_MDY
@@ -525,9 +561,9 @@ for flag, option in args_list:
                 sort_by = _accessed
                 display_col_dta = True
                 use_detail = True
-            elif subopt.lower() == "dts" or subopt.lower() == "t":
-                sort_by = _status
-                display_col_dts = True
+            elif subopt.lower() == "dtc" or subopt.lower() == "c":
+                sort_by = _changed
+                display_col_dtc = True
                 use_detail = True
             elif subopt.lower() == "inode" or subopt.lower() == "i":
                 sort_by = _inode
