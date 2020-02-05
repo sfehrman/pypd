@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
-VERSION = "1.0.2"
+VERSION = "1.0.3"
 GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLRST"
 _accessed = "accessed"
 _blocks = "blocks"
@@ -96,8 +96,9 @@ def show_help():
     -m        show permissions mode [4777]
     -n <args> no output options: [dot|d|hdr|h|name|n|pwd|p|qty|q]
     -p        permissions: rwx rwx rwx   name.group
-    -s <args> sorting options: [none|name|dtm|dta|dts|inode|link|size,rev] (default = '-s name') 
-    -t <args> select type: [file|f,dir|d] (default show both) 
+    -s <args> sorting options: (default = '-s name')
+              [none|0|name|n|dtm|m|dta|a|dts|t|inode|i|link|l|size|s,rev|r] 
+    -t <args> select type: [file|f|dir|d] (default show both) 
     -u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
     -v        program version
     -A        show all entries (including '.' and '..')
@@ -506,31 +507,33 @@ for flag, option in args_list:
         use_detail = True
     elif flag == "-s":
         for subopt in option.split(","):
-            if subopt.lower() == "none":
+            if subopt.lower() == "none" or subopt.lower() == "0":
                 sort_by = ""
-            elif subopt.lower() == "rev":
+            elif subopt.lower() == "name" or subopt.lower() == "n":
+                sort_by = _name
+            elif subopt.lower() == "rev" or subopt.lower() == "r":
                 use_reverse = True
-            elif subopt.lower() == "size":
+            elif subopt.lower() == "size" or subopt.lower() == "s":
                 sort_by = _size
                 display_col_size = True
                 use_detail = True
-            elif subopt.lower() == "dtm":
+            elif subopt.lower() == "dtm" or subopt.lower() == "m":
                 sort_by = _modified
                 display_col_dtm = True
                 use_detail = True
-            elif subopt.lower() == "dta":
+            elif subopt.lower() == "dta" or subopt.lower() == "a":
                 sort_by = _accessed
                 display_col_dta = True
                 use_detail = True
-            elif subopt.lower() == "dts":
+            elif subopt.lower() == "dts" or subopt.lower() == "t":
                 sort_by = _status
                 display_col_dts = True
                 use_detail = True
-            elif subopt.lower() == "inode":
+            elif subopt.lower() == "inode" or subopt.lower() == "i":
                 sort_by = _inode
                 display_col_inode = True
                 use_detail = True
-            elif subopt.lower() == "link":
+            elif subopt.lower() == "link" or subopt.lower() == "l":
                 sort_by = _link
                 display_col_link = True
                 use_detail = True
