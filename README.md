@@ -22,15 +22,16 @@ pd -h
 
     -b        brief, unformatted output
     -c        count entries only
-    -d <args> date/time options: [all|dtm|dta|dts] [mdy|dmy|ymd]
+    -d <args> date/time options: [full|f|dtm|m|dta|a|dtc|s] [mdy|dmy|ymd]
     -h        help
     -i        show inode numbers
-    -l        show symbolic link status
+    -l        show symbolic link's status
     -m        show permissions mode [4777]
-    -n <args> no output options: [dot,hdr,name,pwd,qty]
+    -n <args> no output options: [dot|d|hdr|h|name|n|pwd|p|qty|q]
     -p        permissions: rwx rwx rwx   name.group
-    -s <args> sorting options: [none|name|dtm|dta|dts|inode|link|size,rev] (default = '-s name') 
-    -t <args> select type: [file|f,dir|d] (default show both) 
+    -s <args> sorting options: (default = '-s name')
+              [none|0|name|n|dtm|m|dta|a|dtc|c|inode|i|link|l|size|s,rev|r] 
+    -t <args> select type: [file|f|dir|d] (default show both) 
     -u <args> select unit for file size: [b|k|m|g] (default = '-u b') implicitly uses '-S'
     -v        program version
     -A        show all entries (including '.' and '..')
@@ -38,9 +39,9 @@ pd -h
     -C        output using single column
     -D        show sub-directory information not the entries (treat it like a file)
     -L        show hard link count
-    -R        recursive list into sub-directories
     -S        show file size (default = bytes)
     -T        show file types
+
 ```
 
 # Examples
