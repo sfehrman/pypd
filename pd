@@ -26,7 +26,7 @@ SOFTWARE.
 # Constants
 # ---------
 
-_VERSION = "1.1.1"
+_VERSION = "1.1.2"
 _GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLST"
 _ATIME = "atime"
 _INODE = "inode"
@@ -78,7 +78,7 @@ date_format_MDY = '%m-%d-%Y %H:%M:%S'
 date_format_DMY = '%d-%m-%Y %H:%M:%S'
 date_format = date_format_YMD
 unit_divide = 1  # byte = 1, KB = 1000 ** 1, MB = 1000 ** 2, GB = 1000 ** 3
-unit_text = ""
+unit_text = "Size (Bytes)" # default file size unit
 
 
 # --------
@@ -530,8 +530,6 @@ for flag, option in args_list:
                 use_reverse = True
             elif subopt.lower() == "size" or subopt.lower() == "s":
                 sort_by = _SIZE
-                unit_divide = 1
-                unit_text = "Size (Bytes)"
                 display_col_size = True
                 use_detail = True
             elif subopt.lower() == "dtm" or subopt.lower() == "m":
@@ -598,8 +596,6 @@ for flag, option in args_list:
         display_col_link = True
         use_detail = True
     elif flag == "-S":
-        unit_divide = 1
-        unit_text = "Size (Bytes)"
         display_col_size = True
         use_detail = True
     elif flag == "-T":
