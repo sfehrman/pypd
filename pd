@@ -26,7 +26,7 @@ SOFTWARE.
 # Constants
 # ---------
 
-_VERSION = "1.1.0"
+_VERSION = "1.1.1"
 _GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLST"
 _ATIME = "atime"
 _INODE = "inode"
@@ -131,9 +131,6 @@ class Entry:
         self.mtime = 0.0      # stat date / time modified
         self.atime = 0.0      # stat date / time accessed
         self.ctime = 0.0      # stat date / time changed status
-
-    def pathname(self):
-        return self.path + '/' + self.name
 
 
 def get_entry(entry_name, path_name):
@@ -533,6 +530,8 @@ for flag, option in args_list:
                 use_reverse = True
             elif subopt.lower() == "size" or subopt.lower() == "s":
                 sort_by = _SIZE
+                unit_divide = 1
+                unit_text = "Size (Bytes)"
                 display_col_size = True
                 use_detail = True
             elif subopt.lower() == "dtm" or subopt.lower() == "m":
