@@ -26,7 +26,7 @@ SOFTWARE.
 # Constants
 # ---------
 
-_VERSION = "1.1.2"
+_VERSION = "1.1.3"
 _GETOPT_STR = "bcd:hilmn:ps:t:u:vABCDLST"
 _ATIME = "atime"
 _INODE = "inode"
@@ -377,12 +377,18 @@ def display_details(entries):
                     print('[' + oct(entry.mode)[-4:] + ']', end='')
 
                 if show_name:
-                    pwd_data = pwd.getpwuid(entry.uid)
-                    grp_data = grp.getgrgid(entry.gid)
+                    try:
+                        pwd_data = pwd.getpwuid(entry.uid)
+                        user_name = pwd_data[0]
+                    except:
+                        user_name = str(entry.uid)
 
-                    user_name = pwd_data[0]
-                    group_name = grp_data[0]
-
+                    try:
+                        grp_data = grp.getgrgid(entry.gid)
+                        group_name = grp_data[0]
+                    except:
+                        group_name = str(entry.gid)
+                        
                     if len(user_name) > 12:
                         user_name = user_name[:12]
 
