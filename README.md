@@ -2,6 +2,8 @@
 
 **Python version of Print Directory (pd) command**
 
+This project is inspired by the PRIMOS command "LD" for listing the directory.
+
 This program will read the current directory or the directories listed 
 on the command line and display the contents showing the **files** first 
 then the **directories**. The `pd` command provides an alternative the 
